@@ -6,7 +6,7 @@ import sqlite3 from 'sqlite3'
 import { OpenAI } from 'openai'
 import type { Request, Response } from 'express'
 
-const db = new sqlite3.Database('./chat.db')
+const db = new sqlite3.Database('./chats.db')
 const openai = new OpenAI({ baseURL: 'https://api.deepseek.com/v1', apiKey: envSecret.DEEPSEEK_API_KEY })
 
 // Create tables
