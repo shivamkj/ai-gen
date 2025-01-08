@@ -5,10 +5,11 @@ import './index.css'
 // @ts-expect-error
 import Temp from './temp'
 import './test.css'
+import { ChatInterface } from './chat'
 
 export const TestPage = () => {
   return (
-    <Temp />
+    <ChatInterface />
     // <Frame>
     //  <div></div>
     // </Frame>
