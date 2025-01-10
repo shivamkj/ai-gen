@@ -10,11 +10,9 @@ import { useStore } from 'zustand'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import useAICompletion from './use-completion'
-import Markdown from 'react-markdown'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Loader } from './components'
+import { Markdown } from './markdown'
 
 const Ctx = createContext<ContextVal<typeof chatStore>>(null)
 
@@ -134,30 +132,8 @@ function Messages({ chatId }: { chatId: number | undefined }) {
     <ScrollArea className={`flex-1 p-4 bg-gray-900`} ref={scrollAreaRef}>
       {data.map((message, index) => (
         <div key={index} className={`mb-4 flex ${message.role === 'assistant' ? 'flex-row-reverse justify-end' : ''}`}>
-          <Card
-            className={`p-6 ${message.role === 'user' ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-800 text-white'}`}>
-            <Markdown
-              components={{
-                code(props) {
-                  const { children, className, node, ...rest } = props
-                  const match = /language-(\w+)/.exec(className || '')
-                  return match ? (
-                    <SyntaxHighlighter
-                      {...rest}
-                      PreTag="div"
-                      children={String(children).replace(/\n$/, '')}
-                      language={match[1]}
-                      style={a11yDark}
-                    />
-                  ) : (
-                    <code {...rest} className={className}>
-                      {children}
-                    </code>
-                  )
-                },
-              }}>
-              {message.content}
-            </Markdown>
+          <Card className={`p-6 ${message.role === 'user' ? 'bg-blue-500 text-white ml-auto' : ''}`}>
+            <Markdown content={message.content} />
           </Card>
           <Avatar className="mx-6">
             <AvatarFallback className="text-sm">{message.role === 'user' ? 'YOU' : 'AI'}</AvatarFallback>
@@ -212,7 +188,7 @@ function ChatHistory({ selectedChatId }: { selectedChatId: number | undefined })
           )}
           onClick={() => setChat(chat.id)}>
           <div>
-            <div className="text-white font-medium text-gray-900">{chat.id}</div>
+            <div className="text-white font-medium">{chat.id}</div>
             <div className={`text-sm text-gray-500`}>{chat.created_at}</div>
           </div>
           <Trash2Icon className="text-red-600 size-5" />

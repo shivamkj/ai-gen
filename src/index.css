@@ -68,3 +68,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+pre {
+  @apply relative bg-neutral-800 p-4 my-3 rounded-md;
+}
