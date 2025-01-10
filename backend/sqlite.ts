@@ -11,10 +11,18 @@ export class SQLiteClient {
   }
 
   // Serialize database operations
-  async serialize(callback: () => Promise<void>) {
+  async transaction(callback: () => Promise<any>) {
     return new Promise((resolve, reject) => {
-      this.db.serialize(() => {
-        callback().then(resolve).catch(reject)
+      this.db.serialize(async () => {
+        try {
+          this.db.exec('BEGIN')
+          const result = await callback()
+          this.db.exec('COMMIT')
+          resolve(result)
+        } catch (error) {
+          this.db.exec('ROLLBACK')
+          reject(error)
+        }
       })
     })
   }

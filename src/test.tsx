@@ -6,6 +6,8 @@ import './index.css'
 import Temp from './temp'
 import './test.css'
 import { ChatInterface } from './chat'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from '@/components/ui/toaster'
 
 export const TestPage = () => {
   return (
@@ -20,8 +22,13 @@ function Frame({ children }: { children: React.ReactNode }) {
   return <div className="flex w-full items-center justify-center p-4">{children}</div>
 }
 
+const queryClient = new QueryClient()
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <TestPage />
+    <QueryClientProvider client={queryClient}>
+      <TestPage />
+      <Toaster />
+    </QueryClientProvider>
   </StrictMode>
 )

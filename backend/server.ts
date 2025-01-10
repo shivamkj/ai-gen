@@ -1,20 +1,16 @@
-import dotenv from 'dotenv'
-import { readFileSync } from 'node:fs'
-const envSecret = dotenv.parse(readFileSync('./.env.development.local'))
-
-import { OpenAI } from 'openai'
 import type { Request, Response } from 'express'
 import { SQLiteClient } from './sqlite'
+import { AiResponse, deepSeek } from './ai-apis'
 
 const db = new SQLiteClient('./chats.db')
-const openai = new OpenAI({ baseURL: 'https://api.deepseek.com/v1', apiKey: envSecret.DEEPSEEK_API_KEY })
 
 // Create tables
-await db.serialize(async () => {
+await db.transaction(async () => {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS chats (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       model TEXT NOT NULL,
+      provider TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
@@ -33,7 +29,9 @@ await db.serialize(async () => {
 
 // Start new chat
 export async function startChat(req: Request, res: Response) {
-  const { model = 'deepseek-chat' } = req.body
+  const { model = 'deepseek-chat', provider } = req.body
+
+  if (!provider || !model) throw new Error('model & provider startChat')
 
   const result = await db.execute('INSERT INTO chats (model) VALUES (?)', [model])
 
@@ -46,7 +44,6 @@ export async function startChat(req: Request, res: Response) {
 
 // Reply to chat with streaming
 export async function replyToChat(req: Request, res: Response) {
-  console.log('eejs')
   const chatId = req.params.id
   const { message } = req.query
 
@@ -54,43 +51,41 @@ export async function replyToChat(req: Request, res: Response) {
     return res.status(400).json({ error: 'Message is required' })
   }
 
-  // Save user message
-  await db.execute('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [chatId, 'user', message])
+  const response = await db.transaction(async () => {
+    // Save user message
+    await db.execute('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [chatId, 'user', message])
 
-  // Get model used for this chat
-  const { model } = await db.queryOne<{ model: string }>('SELECT model FROM chats WHERE id = ?', [chatId])
+    // Get model used for this chat
+    const { model } = await db.queryOne<{ model: string }>('SELECT model FROM chats WHERE id = ?', [chatId])
 
-  type MessageRows = { role: string; content: string }
+    type MessageRows = { role: string; content: string }
 
-  const messages = await db.query<MessageRows>(
-    'SELECT role, content FROM messages WHERE chat_id = ? ORDER BY created_at ASC',
-    [chatId]
-  )
+    const messages = await db.query<MessageRows>(
+      'SELECT role, content FROM messages WHERE chat_id = ? ORDER BY created_at ASC',
+      [chatId]
+    )
 
-  try {
-    const completion = await openai.chat.completions.create({
-      model: model,
-      messages: messages as any,
-      stream: false,
-    })
+    let aiResponse: AiResponse
 
-    const response = {
-      content: completion.choices[0]?.message?.content || '',
-      input: completion.usage?.prompt_tokens,
-      output: completion.usage?.completion_tokens,
+    switch (model) {
+      case 'deepseek-chat':
+        aiResponse = await deepSeek('deepseek-chat', [messages[messages.length - 1]])
+        break
+      default:
+        throw new Error('Unknown error')
     }
 
     // Save assistant response
     await db.execute('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [
       chatId,
       'assistant',
-      response.content,
+      aiResponse.content,
     ])
 
-    return res.json(response)
-  } catch (error) {
-    res.status(500).json({ error: error })
-  }
+    return aiResponse
+  })
+
+  res.json(response)
 }
 
 // Get chat history

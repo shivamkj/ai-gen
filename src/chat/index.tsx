@@ -1,21 +1,26 @@
-import { createContext, useEffect, useState } from 'react'
+import { createContext, useEffect, useRef } from 'react'
 import { Send, Bot, History, Trash2Icon } from 'lucide-react'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import { ContextVal, initStore, StoreI, SetState, useAction, useStoreX } from './global-state'
+import { ContextVal, initStore, StoreI, SetState, useAction, useStoreX, baseUrl } from './global-state'
 import { useStore } from 'zustand'
-import { useQueries, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
+import useAICompletion from './use-completion'
+import Markdown from 'react-markdown'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Loader } from './components'
 
 const Ctx = createContext<ContextVal<typeof chatStore>>(null)
 
 type ChatHistory = { id: number; title: string; date: string }
 
 interface ChatStore {
-  // chatHistory: { id: number; title: string; date: string }[]
   seletedChatId: number | undefined
   selectedModel: string
   setChat: (chatId: number | undefined) => void
@@ -36,8 +41,7 @@ function chatStore(set: SetState<ChatStore>): StoreI<ChatStore> {
 }
 
 export const ChatInterface = () => {
-  // const [messages, setMessages] = useState([])
-  const [input, setInput] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
   const storeValue = initStore<StoreI<ChatStore>>(chatStore)
   const selectedChatId = useStore(storeValue, (s) => s.seletedChatId)
   const { setChat } = storeValue.getState()
@@ -47,30 +51,14 @@ export const ChatInterface = () => {
     document.documentElement.style.colorScheme = 'dark'
   }, [])
 
-  console.log(Math.random(), selectedChatId)
+  const { mutate, isPending } = useAICompletion(selectedChatId)
 
   const handleSend = () => {
-    if (!input.trim()) return
-
-    // const newMessage = {
-    //   id: messages.length + 1,
-    //   content: input,
-    //   sender: 'user',
-    //   timestamp: new Date().toISOString(),
-    // }
-
-    // setMessages([...messages, newMessage])
-    setInput('')
-
-    // setTimeout(() => {
-    //   const aiResponse = {
-    //     id: messages.length + 2,
-    //     content: `Response to: ${input}`,
-    //     sender: 'ai',
-    //     timestamp: new Date().toISOString(),
-    //   }
-    //   // setMessages((prev) => [...prev, aiResponse])
-    // }, 1000)
+    if (inputRef.current == null) return
+    const input = inputRef.current!.value.trim()
+    inputRef.current.value = ''
+    if (!input) return
+    mutate(input)
   }
 
   return (
@@ -96,16 +84,17 @@ export const ChatInterface = () => {
         </div>
 
         <div className="flex-1 flex flex-col">
-          <Messages selectedChatId={selectedChatId} />
+          <SelectModel chatId={selectedChatId} />
+
+          <Messages chatId={selectedChatId} />
+
+          {isPending && <Loader />}
 
           <div className="p-4 border-t bg-gray-800 border-gray-700">
-            <SelectModel selectedChatId={selectedChatId} />
-
             <div className="flex gap-2">
               <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                ref={inputRef}
+                // onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Type your message..."
                 className="flex-1 bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
               />
@@ -120,42 +109,66 @@ export const ChatInterface = () => {
   )
 }
 
-function Messages({ selectedChatId }: { selectedChatId: number | undefined }) {
-  const [ress] = useQueries({
-    queries: [
-      {
-        queryKey: ['chat', selectedChatId],
-        queryFn: () => {
-          if (selectedChatId == null) return null
-          return fetch(`http://localhost:5173/api/chats/${selectedChatId}`).then((res) => res.json())
-        },
-      },
-    ],
+function Messages({ chatId }: { chatId: number | undefined }) {
+  const { data } = useQuery({
+    queryKey: ['chat', chatId],
+    enabled: chatId != null,
+    queryFn: () => fetch(`${baseUrl}/api/chats/${chatId}`).then((res) => res.json()),
   })
 
-  if (ress.data == null) return
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  const messages = ress.data
+  const scrollToBottom = () => {
+    if (!scrollAreaRef.current) return
+    const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
+    if (scrollContainer) scrollContainer.scrollTop = scrollContainer.scrollHeight
+  }
 
-  console.log('ddddd', messages)
+  useEffect(() => {
+    scrollToBottom()
+  }, [data])
+
+  if (data == null) return <div className="flex-1 text-2xl"></div>
 
   return (
-    <ScrollArea className={`flex-1 p-4 bg-gray-900`}>
-      {messages.map((message) => (
-        <div key={message.id} className={`mb-4 ${message.role === 'user' ? 'ml-auto' : 'mr-auto'}`}>
+    <ScrollArea className={`flex-1 p-4 bg-gray-900`} ref={scrollAreaRef}>
+      {data.map((message, index) => (
+        <div key={index} className={`mb-4 flex ${message.role === 'assistant' ? 'flex-row-reverse justify-end' : ''}`}>
           <Card
-            className={`p-3 max-w-md ${
-              message.role === 'user' ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-800 text-white'
-            }`}>
-            {message.content}
+            className={`p-6 ${message.role === 'user' ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-800 text-white'}`}>
+            <Markdown
+              components={{
+                code(props) {
+                  const { children, className, node, ...rest } = props
+                  const match = /language-(\w+)/.exec(className || '')
+                  return match ? (
+                    <SyntaxHighlighter
+                      {...rest}
+                      PreTag="div"
+                      children={String(children).replace(/\n$/, '')}
+                      language={match[1]}
+                      style={a11yDark}
+                    />
+                  ) : (
+                    <code {...rest} className={className}>
+                      {children}
+                    </code>
+                  )
+                },
+              }}>
+              {message.content}
+            </Markdown>
           </Card>
+          <Avatar className="mx-6">
+            <AvatarFallback className="text-sm">{message.role === 'user' ? 'YOU' : 'AI'}</AvatarFallback>
+          </Avatar>
         </div>
       ))}
     </ScrollArea>
   )
 }
 
-function SelectModel({ selectedChatId }: { selectedChatId: number | undefined }) {
+function SelectModel({ chatId: selectedChatId }: { chatId: number | undefined }) {
   const selectedModel = useStoreX(Ctx, (s) => s.selectedModel)
   const { changeModel } = useAction(Ctx)
 
@@ -182,7 +195,7 @@ function SelectModel({ selectedChatId }: { selectedChatId: number | undefined })
 function ChatHistory({ selectedChatId }: { selectedChatId: number | undefined }) {
   const { isPending, data } = useQuery<ChatHistory[]>({
     queryKey: ['chatHistory'],
-    queryFn: () => fetch('http://localhost:5173/api/chats/').then((res) => res.json()),
+    queryFn: () => fetch(`${baseUrl}/api/chats/`).then((res) => res.json()),
   })
   const { setChat } = useAction(Ctx)
 
