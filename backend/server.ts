@@ -2,145 +2,121 @@ import dotenv from 'dotenv'
 import { readFileSync } from 'node:fs'
 const envSecret = dotenv.parse(readFileSync('./.env.development.local'))
 
-import sqlite3 from 'sqlite3'
 import { OpenAI } from 'openai'
 import type { Request, Response } from 'express'
+import { SQLiteClient } from './sqlite'
 
-const db = new sqlite3.Database('./chats.db')
+const db = new SQLiteClient('./chats.db')
 const openai = new OpenAI({ baseURL: 'https://api.deepseek.com/v1', apiKey: envSecret.DEEPSEEK_API_KEY })
 
 // Create tables
-db.serialize(() => {
-  db.run(`
-        CREATE TABLE IF NOT EXISTS chats (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          model TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `)
+await db.serialize(async () => {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS chats (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      model TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
 
-  db.run(`
-        CREATE TABLE IF NOT EXISTS messages (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          chat_id INTEGER,
-          role TEXT CHECK(role IN ('user', 'assistant', 'system')),
-          content TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY(chat_id) REFERENCES chats(id)
-        )
-      `)
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      chat_id INTEGER,
+      role TEXT CHECK(role IN ('user', 'assistant', 'system')),
+      content TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(chat_id) REFERENCES chats(id)
+    )
+  `)
 })
 
 // Start new chat
 export async function startChat(req: Request, res: Response) {
   const { model = 'deepseek-chat' } = req.body
 
-  db.run('INSERT INTO chats (model) VALUES (?)', [model], function (err) {
-    if (err) return res.status(500).json({ error: err.message })
+  const result = await db.execute('INSERT INTO chats (model) VALUES (?)', [model])
 
-    res.json({
-      chatId: this.lastID,
-      model,
-      createdAt: new Date().toISOString(),
-    })
+  res.json({
+    chatId: result.lastID,
+    model,
+    createdAt: new Date().toISOString(),
   })
 }
 
 // Reply to chat with streaming
 export async function replyToChat(req: Request, res: Response) {
+  console.log('eejs')
   const chatId = req.params.id
-  const { message } = req.body
+  const { message } = req.query
 
   if (!message) {
     return res.status(400).json({ error: 'Message is required' })
   }
 
   // Save user message
-  db.run('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [chatId, 'user', message])
+  await db.execute('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [chatId, 'user', message])
 
-  db.get('SELECT model FROM chats WHERE id = ?', [chatId], (err, row) => {
-    if (err) throw err
-    const model = row?.model
+  // Get model used for this chat
+  const { model } = await db.queryOne<{ model: string }>('SELECT model FROM chats WHERE id = ?', [chatId])
 
-    console.log('model', model)
+  type MessageRows = { role: string; content: string }
 
-    db.all(
-      'SELECT role, content FROM messages WHERE chat_id = ? ORDER BY created_at ASC',
-      [chatId],
-      async (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message })
+  const messages = await db.query<MessageRows>(
+    'SELECT role, content FROM messages WHERE chat_id = ? ORDER BY created_at ASC',
+    [chatId]
+  )
 
-        const messages = rows.map((row) => ({
-          role: row.role,
-          content: row.content,
-        }))
+  try {
+    const completion = await openai.chat.completions.create({
+      model: model,
+      messages: messages as any,
+      stream: false,
+    })
 
-        try {
-          console.log({
-            model: model,
-            messages,
-            stream: true,
-          })
-          const stream = await openai.chat.completions.create({
-            model: model,
-            messages,
-            stream: true,
-          })
+    const response = {
+      content: completion.choices[0]?.message?.content || '',
+      input: completion.usage?.prompt_tokens,
+      output: completion.usage?.completion_tokens,
+    }
 
-          res.setHeader('Content-Type', 'text/event-stream')
-          res.setHeader('Cache-Control', 'no-cache')
-          res.setHeader('Connection', 'keep-alive')
+    // Save assistant response
+    await db.execute('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [
+      chatId,
+      'assistant',
+      response.content,
+    ])
 
-          let fullResponse = ''
-
-          for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || ''
-            fullResponse += content
-            res.write(`data: ${JSON.stringify({ content })}\n\n`)
-          }
-
-          // Save assistant response
-          db.run('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [chatId, 'assistant', fullResponse])
-
-          res.end()
-        } catch (error) {
-          res.status(500).json({ error: error.message })
-        }
-      }
-    )
-  })
+    return res.json(response)
+  } catch (error) {
+    res.status(500).json({ error: error })
+  }
 }
 
 // Get chat history
-export function getChatHistory(req: Request, res: Response) {
+export async function getChatHistory(req: Request, res: Response) {
   const chatId = req.params.id
 
-  db.all(
+  const messges = await db.query(
     `SELECT m.id, m.role, m.content, m.created_at 
          FROM messages m
          WHERE m.chat_id = ?
          ORDER BY m.created_at ASC`,
-    [chatId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message })
-      res.json(rows)
-    }
+    [chatId]
   )
+  return res.json(messges)
 }
 
-export function getAllChats(req: Request, res: Response) {
-  db.all(
+export async function getAllChats(_: Request, res: Response) {
+  const chats = await db.query(
     `SELECT c.id, c.model, c.created_at, 
                   COUNT(m.id) as message_count
            FROM chats c
            LEFT JOIN messages m ON c.id = m.chat_id
            GROUP BY c.id
-           ORDER BY c.created_at DESC`,
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message })
-      res.json(rows)
-    }
+           ORDER BY c.created_at DESC`
   )
+  return res.json(chats)
 }
 
 process.on('SIGINT', () => {

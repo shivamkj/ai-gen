@@ -4,9 +4,13 @@ import { getAllChats, getChatHistory, replyToChat, startChat } from './server'
 export const app = express()
 
 app.use(express.json())
+app.use((_, res, next) => {
+  res.removeHeader('x-powered-by')
+  next()
+})
 
 // Define your Express routes
-app.get('/api/hello', (req, res) => {
+app.get('/api/hello', (_, res) => {
   res.json({ message: 'Hello from Express!' })
 })
 
