@@ -1,6 +1,7 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { baseUrl } from './global-state'
-import { toast } from '@/hooks/use-toast'
+// @ts-expect-error
+import Toastify from 'toastify-js'
 
 export default function useAICompletion(chatId: number | undefined) {
   const queryClient = useQueryClient()
@@ -16,11 +17,7 @@ export default function useAICompletion(chatId: number | undefined) {
     },
     onError: (error) => {
       console.error(error)
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: `${error.name}: ${error.message}`,
-      })
+      showErrorToast(`Unexpected Error Occured: ${error?.name}: ${error?.message}`)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chat', chatId] })
@@ -28,4 +25,18 @@ export default function useAICompletion(chatId: number | undefined) {
   })
 
   return { mutate, error, isPending } as const
+}
+
+function showErrorToast(message: string) {
+  Toastify({
+    text: message,
+    duration: 8000,
+    newWindow: true,
+    close: true,
+    gravity: 'top',
+    position: 'left',
+    stopOnFocus: true,
+    style: { background: 'red' },
+    onClick: function () {}, // Callback after click
+  }).showToast()
 }

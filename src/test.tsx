@@ -5,9 +5,9 @@ import './index.css'
 // @ts-expect-error
 import Temp from './temp'
 import './test.css'
+import 'toastify-js/src/toastify.css'
 import { ChatInterface } from './chat'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Toaster } from '@/components/ui/toaster'
 
 export const TestPage = () => {
   return (
@@ -28,7 +28,6 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <TestPage />
-      <Toaster />
     </QueryClientProvider>
   </StrictMode>
 )

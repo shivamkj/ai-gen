@@ -1,17 +1,13 @@
 import { createContext, useEffect, useRef } from 'react'
 import { Send, Bot, History, Trash2Icon } from 'lucide-react'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Input } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
+import { ScrollArea } from './scroll-area'
 import { ContextVal, initStore, StoreI, SetState, useAction, useStoreX, baseUrl } from './global-state'
 import { useStore } from 'zustand'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import useAICompletion from './use-completion'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Loader } from './components'
+import { Avatar } from './avatar'
+import { Loader } from './loader'
 import { Markdown } from './markdown'
 
 const Ctx = createContext<ContextVal<typeof chatStore>>(null)
@@ -68,20 +64,23 @@ export const ChatInterface = () => {
             <h1 className="text-xl font-bold text-white">AI Chat</h1>
           </div>
 
-          <Button className="w-full mb-4" onClick={() => setChat(undefined)}>
+          <button
+            type="button"
+            className="w-full text-white focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-blue-800"
+            onClick={() => setChat(undefined)}>
             New Chat
-          </Button>
+          </button>
 
           <div className="flex items-center gap-2 mb-4 text-white">
             <History className="h-4 w-4" />
             <span className="font-medium">Chat History</span>
           </div>
-          <ScrollArea className="h-[calc(100vh-200px)]">
+          <div className="h-[calc(100vh-200px)]">
             <ChatHistory selectedChatId={selectedChatId} />
-          </ScrollArea>
+          </div>
         </div>
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col max-h-screen">
           <SelectModel chatId={selectedChatId} />
 
           <Messages chatId={selectedChatId} />
@@ -90,15 +89,18 @@ export const ChatInterface = () => {
 
           <div className="p-4 border-t bg-gray-800 border-gray-700">
             <div className="flex gap-2">
-              <Input
-                ref={inputRef}
+              <input
                 // onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                className={clsx(
+                  'border-gray-500 file:text-zinc-50 placeholder:text-zinc-400 focus-visible:ring-zinc-300 flex h-9 w-full rounded-md border bg-transparent px-3 py-1 shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50 text-sm',
+                  'flex-1 bg-gray-700 border-gray-600 text-white placeholder:text-gray-400'
+                )}
                 placeholder="Type your message..."
-                className="flex-1 bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
+                ref={inputRef}
               />
-              <Button onClick={handleSend}>
+              <button className="border border-gray-500 rounded px-6" onClick={handleSend}>
                 <Send className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -129,20 +131,35 @@ function Messages({ chatId }: { chatId: number | undefined }) {
   if (data == null) return <div className="flex-1 text-2xl"></div>
 
   return (
-    <ScrollArea className={`flex-1 p-4 bg-gray-900`} ref={scrollAreaRef}>
+    <ScrollArea outerClass="flex-1 bg-gray-900" innerClass='p-4' ref={scrollAreaRef}>
       {data.map((message, index) => (
         <div key={index} className={`mb-4 flex ${message.role === 'assistant' ? 'flex-row-reverse justify-end' : ''}`}>
-          <Card className={`p-6 ${message.role === 'user' ? 'bg-blue-500 text-white ml-auto' : ''}`}>
+          <div
+            className={clsx(
+              `border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950 text-zinc-50 rounded-xl border bg-white shadow p-6`,
+              message.role === 'user' && 'bg-blue-500 text-white ml-auto'
+            )}>
             <Markdown content={message.content} />
-          </Card>
-          <Avatar className="mx-6">
-            <AvatarFallback className="text-sm">{message.role === 'user' ? 'YOU' : 'AI'}</AvatarFallback>
-          </Avatar>
+          </div>
+          <Avatar className="mx-6" initials={message.role === 'user' ? 'YOU' : 'AI'} />
         </div>
       ))}
     </ScrollArea>
   )
 }
+
+const models = [
+  {
+    name: 'Deepseek v3',
+    modelId: 'deepseek-chat	',
+    provider: 'deepseek',
+  },
+  {
+    name: 'Claude 3.5 Sonnet',
+    modelId: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+    provider: 'bedrock',
+  },
+]
 
 function SelectModel({ chatId: selectedChatId }: { chatId: number | undefined }) {
   const selectedModel = useStoreX(Ctx, (s) => s.selectedModel)
@@ -151,18 +168,18 @@ function SelectModel({ chatId: selectedChatId }: { chatId: number | undefined })
   return (
     <div className="p-4 border-b flex items-center justify-between bg-gray-800 border-gray-700">
       {selectedChatId == undefined && (
-        <Select value={selectedModel} onValueChange={changeModel}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="gpt-3.5">GPT-3.5</SelectItem>
-              <SelectItem value="gpt-4">GPT-4</SelectItem>
-              <SelectItem value="claude">Claude</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        <select
+          name="models"
+          id="models"
+          className="w-48 border text-sm rounded-lg block p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
+          onChange={(e) => changeModel(e.target.value)}
+          value={selectedModel}>
+          {models.map((m, index) => (
+            <option key={index} value={m.modelId}>
+              {m.name}
+            </option>
+          ))}
+        </select>
       )}
     </div>
   )

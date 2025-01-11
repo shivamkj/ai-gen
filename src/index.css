@@ -72,3 +72,25 @@
 pre {
   @apply relative bg-neutral-800 p-4 my-3 rounded-md;
 }
+
+/* ************************ Scrollbar styles ************************ */
+
+/* Width of scroll bar */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  @apply bg-gray-50;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  @apply rounded-sm bg-gray-300 dark:bg-gray-500;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-700;
+}
