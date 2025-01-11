@@ -14,7 +14,9 @@ function __ScrollArea(
 ) {
   return (
     <div className={`relative w-full overflow-hidden ${outerClass}`} ref={ref}>
-      <div className={`h-full w-full overflow-auto ${innerClass}`}>{children}</div>
+      <div className={`h-full w-full overflow-auto ${innerClass}`} data-scrollable="true">
+        {children}
+      </div>
     </div>
   )
 }

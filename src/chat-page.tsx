@@ -3,15 +3,15 @@ import { Send, Bot, History } from 'lucide-react'
 import { ContextVal, initStore, StoreI, SetState } from './global-state'
 import { useStore } from 'zustand'
 import clsx from 'clsx'
-import useAICompletion from '@/components/use-completion'
+import useAICompletion from '@/hooks'
 import { Loader } from '@/components/loader'
 import { ChatHistory } from '@/components/chat-history'
-import { SelectModel } from '@/components/select-models'
+import { models, SelectModel } from '@/components/select-models'
 import { Messages } from '@/components/messages'
 
 export const Ctx = createContext<ContextVal<typeof chatStore>>(null)
 
-interface ChatStore {
+export interface ChatStore {
   seletedChatId: number | undefined
   selectedModel: string
   setChat: (chatId: number | undefined) => void
@@ -21,7 +21,7 @@ interface ChatStore {
 function chatStore(set: SetState<ChatStore>): StoreI<ChatStore> {
   return {
     seletedChatId: undefined,
-    selectedModel: 'gpt-3.5',
+    selectedModel: models[0].modelId,
     changeModel: (modelId) => set((prev) => ({ ...prev, selectedModel: modelId })),
     setChat: (chatId) => set((prev) => ({ ...prev, seletedChatId: chatId })),
   }
@@ -38,7 +38,7 @@ export const ChatInterface = () => {
     document.documentElement.style.colorScheme = 'dark'
   }, [])
 
-  const { mutate, isPending } = useAICompletion(selectedChatId)
+  const { mutate, isPending } = useAICompletion(selectedChatId, storeValue)
 
   const handleSend = () => {
     if (inputRef.current == null) return

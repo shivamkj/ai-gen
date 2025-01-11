@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAllChats, getChatHistory, replyToChat, startChat } from './server'
+import { deleteChat, getAllChats, getChatHistory, replyChat, startChat } from './server'
 
 export const app = express()
 
@@ -14,7 +14,8 @@ app.get('/api/hello', (_, res) => {
   res.json({ message: 'Hello from Express!' })
 })
 
-app.post('/api/chats', startChat)
-app.post('/api/chats/:id/reply', replyToChat)
+app.post('/api/chats/start', startChat)
+app.post('/api/chats/:id/reply', replyChat)
+app.delete('/api/chats/:id', deleteChat)
 app.get('/api/chats/:id', getChatHistory)
 app.get('/api/chats', getAllChats)

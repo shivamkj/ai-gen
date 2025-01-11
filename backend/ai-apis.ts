@@ -42,7 +42,7 @@ const bedrockClient = new BedrockRuntimeClient({
 
 export async function bedrock(model: string, messages: any[]): Promise<AiResponse> {
   const command = new InvokeModelCommand({
-    modelId: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+    modelId: model,
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({
@@ -53,8 +53,6 @@ export async function bedrock(model: string, messages: any[]): Promise<AiRespons
   })
   const response = await bedrockClient.send(command)
   const responseBody = JSON.parse(new TextDecoder().decode(response.body))
-
-  console.log(responseBody)
 
   return {
     content: responseBody.content[0].text,

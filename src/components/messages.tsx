@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import { ScrollArea } from './scroll-area'
 import { Markdown } from './markdown'
 import { Avatar } from './avatar'
-import { baseUrl } from './use-completion'
+import { baseUrl } from '@/hooks'
 import clsx from 'clsx'
 
 export function Messages({ chatId }: { chatId: number | undefined }) {
@@ -17,7 +17,7 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
 
   const scrollToBottom = () => {
     if (!scrollAreaRef.current) return
-    const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
+    const scrollContainer = scrollAreaRef.current.querySelector('[data-scrollable]')
     if (scrollContainer) scrollContainer.scrollTop = scrollContainer.scrollHeight
   }
 

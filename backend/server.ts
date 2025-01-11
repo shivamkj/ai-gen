@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express'
 import { SQLiteClient } from './sqlite'
-import { AiResponse, deepSeek } from './ai-apis'
+import { AiResponse, bedrock, deepSeek } from './ai-apis'
 
 const db = new SQLiteClient('./chats.db')
 
@@ -27,36 +27,10 @@ await db.transaction(async () => {
   `)
 })
 
-// Start new chat
-export async function startChat(req: Request, res: Response) {
-  const { model = 'deepseek-chat', provider } = req.body
-
-  if (!provider || !model) throw new Error('model & provider startChat')
-
-  const result = await db.execute('INSERT INTO chats (model) VALUES (?)', [model])
-
-  res.json({
-    chatId: result.lastID,
-    model,
-    createdAt: new Date().toISOString(),
-  })
-}
-
-// Reply to chat with streaming
-export async function replyToChat(req: Request, res: Response) {
-  const chatId = req.params.id
-  const { message } = req.query
-
-  if (!message) {
-    return res.status(400).json({ error: 'Message is required' })
-  }
-
-  const response = await db.transaction(async () => {
+export async function processChat(chatId: string, message: string, model: string) {
+  return db.transaction(async () => {
     // Save user message
     await db.execute('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [chatId, 'user', message])
-
-    // Get model used for this chat
-    const { model } = await db.queryOne<{ model: string }>('SELECT model FROM chats WHERE id = ?', [chatId])
 
     type MessageRows = { role: string; content: string }
 
@@ -67,12 +41,12 @@ export async function replyToChat(req: Request, res: Response) {
 
     let aiResponse: AiResponse
 
-    switch (model) {
-      case 'deepseek-chat':
-        aiResponse = await deepSeek('deepseek-chat', [messages[messages.length - 1]])
-        break
-      default:
-        throw new Error('Unknown error')
+    if (model.startsWith('deepseek')) {
+      aiResponse = await deepSeek(model, [messages[messages.length - 1]])
+    } else if (model.startsWith('us.')) {
+      aiResponse = await bedrock(model, [messages[messages.length - 1]])
+    } else {
+      throw new Error('Unknown model error')
     }
 
     // Save assistant response
@@ -84,7 +58,29 @@ export async function replyToChat(req: Request, res: Response) {
 
     return aiResponse
   })
+}
 
+export async function startChat(req: Request, res: Response) {
+  const { message, model } = req.query
+  if (!message || !model) throw new Error('message & model startChat')
+
+  const result = await db.execute('INSERT INTO chats (model) VALUES (?)', [model])
+  const chatId = result.lastID as any
+
+  const response = await processChat(chatId, message as string, model as string)
+  res.json({ chat: { id: chatId, model, createdAt: new Date().toISOString() }, response })
+}
+
+// Reply to chat with streaming
+export async function replyChat(req: Request, res: Response) {
+  const { id } = req.params
+  const { message } = req.query
+  if (!message) throw new Error('chatId & message startChat')
+
+  // Get model used for this chat
+  const { model } = await db.queryOne<{ model: string }>('SELECT model FROM chats WHERE id = ?', [id])
+
+  const response = await processChat(id, message as string, model)
   res.json(response)
 }
 
@@ -99,7 +95,7 @@ export async function getChatHistory(req: Request, res: Response) {
          ORDER BY m.created_at ASC`,
     [chatId]
   )
-  return res.json(messges)
+  res.json(messges)
 }
 
 export async function getAllChats(_: Request, res: Response) {
@@ -111,7 +107,18 @@ export async function getAllChats(_: Request, res: Response) {
            GROUP BY c.id
            ORDER BY c.created_at DESC`
   )
-  return res.json(chats)
+  res.json(chats)
+}
+
+export async function deleteChat(req: Request, res: Response) {
+  const chatId = req.params.id
+
+  await db.transaction(async () => {
+    await db.execute('DELETE FROM messages WHERE chat_id = ?;', [chatId])
+    await db.execute('DELETE FROM chats WHERE id = ?;', [chatId])
+  })
+
+  res.json('"OK"')
 }
 
 process.on('SIGINT', () => {

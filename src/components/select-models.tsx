@@ -1,16 +1,14 @@
 import { useAction, useStoreX } from '@/global-state'
 import { Ctx } from '@/chat-page'
 
-const models = [
+export const models = [
   {
     name: 'Deepseek v3',
-    modelId: 'deepseek-chat	',
-    provider: 'deepseek',
+    modelId: 'deepseek-chat',
   },
   {
     name: 'Claude 3.5 Sonnet',
     modelId: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
-    provider: 'bedrock',
   },
 ]
 
