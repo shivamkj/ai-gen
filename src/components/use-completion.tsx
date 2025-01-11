@@ -1,7 +1,8 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { baseUrl } from './global-state'
 // @ts-expect-error
 import Toastify from 'toastify-js'
+
+export const baseUrl = `http://${window.location.host}`
 
 export default function useAICompletion(chatId: number | undefined) {
   const queryClient = useQueryClient()

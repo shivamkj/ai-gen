@@ -1,8 +1,6 @@
 import { useContext, useEffect, useRef } from 'react'
 import { createStore, StateCreator, StoreApi, useStore } from 'zustand'
 
-export const baseUrl = `http://${window.location.host}`
-
 interface Callbacks {
   onInit?: () => Promise<void>
   onClose?: () => Promise<void>
