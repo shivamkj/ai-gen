@@ -73,7 +73,7 @@ export const ChatInterface = () => {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col max-h-screen">
+        <div className="flex-1 flex flex-col max-h-screen max-w-[calc(100vw-16rem)]">
           <SelectModel chatId={selectedChatId} />
 
           <Messages chatId={selectedChatId} />

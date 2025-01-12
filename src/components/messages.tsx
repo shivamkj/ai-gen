@@ -33,7 +33,7 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
         <div key={index} className={`mb-4 flex ${message.role === 'assistant' ? 'flex-row-reverse justify-end' : ''}`}>
           <div
             className={clsx(
-              `border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950 text-zinc-50 rounded-xl border bg-white shadow p-6`,
+              `border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950 text-zinc-50 rounded-xl border bg-white shadow p-6 overflow-x-hidden`,
               message.role === 'user' && 'bg-blue-500 text-white ml-auto'
             )}>
             <Markdown content={message.content} />

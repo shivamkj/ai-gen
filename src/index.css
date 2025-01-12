@@ -3,9 +3,12 @@
 @tailwind utilities;
 
 pre {
-  @apply relative bg-neutral-800 p-4 my-3 rounded-md;
+  @apply relative bg-neutral-800 p-4 my-3 rounded-md w-full h-full overflow-x-hidden;
 }
 
+code {
+  @apply block w-full h-full overflow-x-auto;
+}
 /* ************************ Scrollbar styles ************************ */
 
 /* Width of scroll bar */
