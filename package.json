@@ -15,6 +15,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "keyword-extractor": "^0.0.28",
     "lucide-react": "^0.469.0",
     "marked": "^15.0.6",
     "openai": "^4.77.3",

@@ -40,7 +40,7 @@ export function ChatHistory({ selectedChatId }: { selectedChatId: number | undef
           )}
           onClick={() => setChat(chat.id)}>
           <div>
-            <div className="text-white font-medium">{chat.id}</div>
+            <div className="text-white font-medium">{chat.title}</div>
             <div className={`text-sm text-gray-500`}>{chat.created_at}</div>
           </div>
           <Trash2Icon className="text-red-600 size-5" onClick={() => deleteChat(chat.id)} />

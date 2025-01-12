@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import { SQLiteClient } from './sqlite'
 import { AiResponse, bedrock, deepSeek } from './ai-apis'
+import { generateTitle } from './title-gen'
 
 const db = new SQLiteClient('./chats.db')
 
@@ -10,7 +11,7 @@ await db.transaction(async () => {
     CREATE TABLE IF NOT EXISTS chats (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       model TEXT NOT NULL,
-      provider TEXT NOT NULL,
+      title TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
@@ -64,7 +65,9 @@ export async function startChat(req: Request, res: Response) {
   const { message, model } = req.query
   if (!message || !model) throw new Error('message & model startChat')
 
-  const result = await db.execute('INSERT INTO chats (model) VALUES (?)', [model])
+  const title = generateTitle(message as string)
+
+  const result = await db.execute('INSERT INTO chats (model, title) VALUES (?, ?)', [model, title])
   const chatId = result.lastID as any
 
   const response = await processChat(chatId, message as string, model as string)
@@ -100,7 +103,7 @@ export async function getChatHistory(req: Request, res: Response) {
 
 export async function getAllChats(_: Request, res: Response) {
   const chats = await db.query(
-    `SELECT c.id, c.model, c.created_at, 
+    `SELECT c.id, c.model, c.title, c.created_at, 
                   COUNT(m.id) as message_count
            FROM chats c
            LEFT JOIN messages m ON c.id = m.chat_id
