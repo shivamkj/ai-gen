@@ -43,9 +43,9 @@ export async function processChat(chatId: string, message: string, model: string
     let aiResponse: AiResponse
 
     if (model.startsWith('deepseek')) {
-      aiResponse = await deepSeek(model, [messages[messages.length - 1]])
+      aiResponse = await deepSeek(model, messages)
     } else if (model.startsWith('us.')) {
-      aiResponse = await bedrock(model, [messages[messages.length - 1]])
+      aiResponse = await bedrock(model, messages)
     } else {
       throw new Error('Unknown model error')
     }
