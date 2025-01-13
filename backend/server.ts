@@ -22,6 +22,8 @@ await db.transaction(async () => {
       chat_id INTEGER,
       role TEXT CHECK(role IN ('user', 'assistant', 'system')),
       content TEXT,
+      input_token INTEGER,
+      output_token INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(chat_id) REFERENCES chats(id)
     )
@@ -30,15 +32,13 @@ await db.transaction(async () => {
 
 export async function processChat(chatId: string, message: string, model: string) {
   return db.transaction(async () => {
-    // Save user message
-    await db.execute('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [chatId, 'user', message])
-
     type MessageRows = { role: string; content: string }
-
+    // Get old messages
     const messages = await db.query<MessageRows>(
       'SELECT role, content FROM messages WHERE chat_id = ? ORDER BY created_at ASC',
       [chatId]
     )
+    messages.push({ role: 'user', content: message }) // Add new message
 
     let aiResponse: AiResponse
 
@@ -50,16 +50,26 @@ export async function processChat(chatId: string, message: string, model: string
       throw new Error('Unknown model error')
     }
 
-    // Save assistant response
-    await db.execute('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [
-      chatId,
-      'assistant',
-      aiResponse.content,
-    ])
+    // Save user & assistant response
+    await db.execute(
+      'INSERT INTO messages (chat_id, role, content, input_token, output_token) VALUES (?, ?, ?, NULL, NULL), (?, ?, ?, ?, ?)',
+      [
+        chatId,
+        'user',
+        message,
+        chatId,
+        'assistant',
+        aiResponse.content,
+        aiResponse.input_token,
+        aiResponse.output_token,
+      ]
+    )
 
     return aiResponse
   })
 }
+
+const systemPrompt = "You are an AI programming assistant. Don't explain code unless asked. "
 
 export async function startChat(req: Request, res: Response) {
   const { message, model } = req.query
@@ -70,7 +80,8 @@ export async function startChat(req: Request, res: Response) {
   const result = await db.execute('INSERT INTO chats (model, title) VALUES (?, ?)', [model, title])
   const chatId = result.lastID as any
 
-  const response = await processChat(chatId, message as string, model as string)
+  const finalMessage = systemPrompt + message
+  const response = await processChat(chatId, finalMessage, model as string)
   res.json({ chat: { id: chatId, model, createdAt: new Date().toISOString() }, response })
 }
 
@@ -87,12 +98,12 @@ export async function replyChat(req: Request, res: Response) {
   res.json(response)
 }
 
-// Get chat history
-export async function getChatHistory(req: Request, res: Response) {
+// Get chat messages
+export async function getAllMessages(req: Request, res: Response) {
   const chatId = req.params.id
 
   const messges = await db.query(
-    `SELECT m.id, m.role, m.content, m.created_at 
+    `SELECT m.id, m.role, m.content, m.created_at, m.input_token, m.output_token
          FROM messages m
          WHERE m.chat_id = ?
          ORDER BY m.created_at ASC`,
@@ -102,14 +113,7 @@ export async function getChatHistory(req: Request, res: Response) {
 }
 
 export async function getAllChats(_: Request, res: Response) {
-  const chats = await db.query(
-    `SELECT c.id, c.model, c.title, c.created_at, 
-                  COUNT(m.id) as message_count
-           FROM chats c
-           LEFT JOIN messages m ON c.id = m.chat_id
-           GROUP BY c.id
-           ORDER BY c.created_at DESC`
-  )
+  const chats = await db.query(`SELECT c.id, c.model, c.title, c.created_at FROM chats c ORDER BY c.created_at DESC`)
   res.json(chats)
 }
 

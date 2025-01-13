@@ -5,8 +5,8 @@ export function Markdown({ content }: { content: string }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (ref.current != null) addCopyButtonsToCodeBlocks(ref.current)
-  }, [])
+    addCopyButtonsToCodeBlocks(ref.current!)
+  }, [content])
 
   return <div ref={ref} dangerouslySetInnerHTML={{ __html: marked.parse(content) }} />
 }

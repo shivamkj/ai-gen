@@ -10,7 +10,7 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
   const { data } = useQuery({
     queryKey: ['chat', chatId],
     enabled: chatId != null,
-    queryFn: () => fetch(`${baseUrl}/api/chats/${chatId}`).then((res) => res.json()),
+    queryFn: () => fetch(`${baseUrl}/api/chats/${chatId}/messages`).then((res) => res.json()),
   })
 
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -28,15 +28,26 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
   if (data == null) return <div className="flex-1 text-2xl"></div>
 
   return (
-    <ScrollArea outerClass="flex-1 bg-gray-900" innerClass="p-4" ref={scrollAreaRef}>
+    <ScrollArea outerClass="flex-1" innerClass="p-4" ref={scrollAreaRef}>
       {data.map((message: any, index: any) => (
         <div key={index} className={`mb-4 flex ${message.role === 'assistant' ? 'flex-row-reverse justify-end' : ''}`}>
           <div
             className={clsx(
-              `border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950 text-zinc-50 rounded-xl border bg-white shadow p-6 overflow-x-hidden`,
+              `border-zinc-800 bg-gray-900 shadow-lg text-zinc-50 rounded-xl border p-6 overflow-x-hidden`,
               message.role === 'user' && 'bg-blue-500 text-white ml-auto'
             )}>
             <Markdown content={message.content} />
+            {message.output_token != null && (
+              <>
+                <hr className="my-4 border-gray-600" />
+                <div className="flex justify-between">
+                  <div className="font-light mr-10">
+                    Input Tokens: {message.input_token}, Output Tokens: {message.output_token}
+                  </div>
+                  {/* <Switch onChange={(e) => console.log(e)} /> */}
+                </div>
+              </>
+            )}
           </div>
           <Avatar className="mx-6" initials={message.role === 'user' ? 'YOU' : 'AI'} />
         </div>

@@ -12,9 +12,11 @@ const enum Providers {
 
 export interface AiResponse {
   content: string
-  input: number | undefined
-  output: number | undefined
+  input_token: number | undefined
+  output_token: number | undefined
 }
+
+const maxTokens = 4096
 
 const deepSeekModel = new OpenAI({ baseURL: 'https://api.deepseek.com/v1', apiKey: envSecret.DEEPSEEK_API_KEY })
 
@@ -22,13 +24,14 @@ export async function deepSeek(model: string, messages: any[]): Promise<AiRespon
   const completion = await deepSeekModel.chat.completions.create({
     model: model,
     messages: messages,
-    stream: false,
+    temperature: 0,
+    max_tokens: maxTokens,
   })
 
   return {
     content: completion.choices[0]?.message?.content || '',
-    input: completion.usage?.prompt_tokens,
-    output: completion.usage?.completion_tokens,
+    input_token: completion.usage?.prompt_tokens,
+    output_token: completion.usage?.completion_tokens,
   }
 }
 
@@ -47,8 +50,9 @@ export async function bedrock(model: string, messages: any[]): Promise<AiRespons
     accept: 'application/json',
     body: JSON.stringify({
       anthropic_version: 'bedrock-2023-05-31',
-      max_tokens: 1000,
+      max_tokens: maxTokens,
       messages: messages,
+      temperature: 0.2,
     }),
   })
   const response = await bedrockClient.send(command)
@@ -56,7 +60,7 @@ export async function bedrock(model: string, messages: any[]): Promise<AiRespons
 
   return {
     content: responseBody.content[0].text,
-    input: responseBody.usage?.input_tokens,
-    output: responseBody.usage?.output_tokens,
+    input_token: responseBody.usage?.input_tokens,
+    output_token: responseBody.usage?.output_tokens,
   }
 }

@@ -32,12 +32,6 @@ export const ChatInterface = () => {
   const storeValue = initStore<StoreI<ChatStore>>(chatStore)
   const selectedChatId = useStore(storeValue, (s) => s.seletedChatId)
   const { setChat } = storeValue.getState()
-
-  useEffect(() => {
-    document.documentElement.classList.add('dark')
-    document.documentElement.style.colorScheme = 'dark'
-  }, [])
-
   const { mutate, isPending } = useAICompletion(selectedChatId, storeValue)
 
   const handleSend = () => {
@@ -50,8 +44,8 @@ export const ChatInterface = () => {
 
   return (
     <Ctx.Provider value={storeValue}>
-      <div className="flex h-screen dark bg-gray-900">
-        <div className="w-64 border-r p-4 bg-gray-800 border-gray-700">
+      <div className="flex h-screen dark bg-gray-950">
+        <div className="w-64 border-r p-4 bg-gray-900 border-gray-700">
           <div className="flex items-center gap-2 mb-6">
             <Bot className="h-6 w-6 text-white" />
             <h1 className="text-xl font-bold text-white">AI Chat</h1>
@@ -80,7 +74,7 @@ export const ChatInterface = () => {
 
           {isPending && <Loader />}
 
-          <div className="p-4 border-t bg-gray-800 border-gray-700">
+          <div className="p-4 border-t bg-gray-900 border-gray-700">
             <div className="flex gap-2">
               <input
                 // onKeyPress={(e) => e.key === 'Enter' && handleSend()}
@@ -92,7 +86,7 @@ export const ChatInterface = () => {
                 ref={inputRef}
               />
               <button className="border border-gray-500 rounded px-6" onClick={handleSend}>
-                <Send className="h-4 w-4" />
+                <Send className="h-4 w-4 text-white" />
               </button>
             </div>
           </div>
