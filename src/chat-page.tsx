@@ -1,4 +1,4 @@
-import { createContext, useEffect, useRef } from 'react'
+import { createContext, useRef } from 'react'
 import { Send, Bot, History } from 'lucide-react'
 import { ContextVal, initStore, StoreI, SetState } from './global-state'
 import { useStore } from 'zustand'
@@ -26,15 +26,21 @@ function chatStore(set: SetState<ChatStore>): StoreI<ChatStore> {
     setChat: (chatId) => set((prev) => ({ ...prev, seletedChatId: chatId })),
   }
 }
+function handleTextInputSize(e: React.FormEvent<HTMLTextAreaElement>) {
+  const inputElement = e.target as HTMLTextAreaElement
+  inputElement.style.height = 'auto'
+  inputElement.style.height = inputElement.scrollHeight + 'px'
+  e.stopPropagation()
+}
 
 export const ChatInterface = () => {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const storeValue = initStore<StoreI<ChatStore>>(chatStore)
   const selectedChatId = useStore(storeValue, (s) => s.seletedChatId)
   const { setChat } = storeValue.getState()
   const { mutate, isPending } = useAICompletion(selectedChatId, storeValue)
 
-  const handleSend = () => {
+  function handleSend() {
     if (inputRef.current == null) return
     const input = inputRef.current!.value.trim()
     inputRef.current.value = ''
@@ -74,18 +80,19 @@ export const ChatInterface = () => {
 
           {isPending && <Loader />}
 
-          <div className="p-4 border-t bg-gray-900 border-gray-700">
-            <div className="flex gap-2">
-              <input
+          <div className="p-4 border-t bg-gray-900 border-gray-500">
+            <div className="flex gap-2 items-center">
+              <textarea
                 // onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 className={clsx(
-                  'border-gray-500 file:text-zinc-50 placeholder:text-zinc-400 focus-visible:ring-zinc-300 flex h-9 w-full rounded-md border bg-transparent px-3 py-1 shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50 text-sm',
-                  'flex-1 bg-gray-700 border-gray-600 text-white placeholder:text-gray-400'
+                  'bg-transparent text-sm text-white placeholder:text-zinc-400 focus-visible:ring-gray-300 rounded-md border p-2 focus-visible:ring-1 disabled:opacity-50',
+                  'h-auto max-h-96 w-full overflow-hidden resize-none flex-1'
                 )}
                 placeholder="Type your message..."
+                onInput={handleTextInputSize}
                 ref={inputRef}
               />
-              <button className="border border-gray-500 rounded px-6" onClick={handleSend}>
+              <button className="border border-gray-500 rounded px-6 size-16" onClick={handleSend}>
                 <Send className="h-4 w-4 text-white" />
               </button>
             </div>

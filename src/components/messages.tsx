@@ -40,11 +40,9 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
             {message.output_token != null && (
               <>
                 <hr className="my-4 border-gray-600" />
-                <div className="flex justify-between">
-                  <div className="font-light mr-10">
-                    Input Tokens: {message.input_token}, Output Tokens: {message.output_token}
-                  </div>
-                  {/* <Switch onChange={(e) => console.log(e)} /> */}
+                <div className="flex justify-between font-light">
+                  <div className="font-light mr-10">Input Tokens: {message.input_token}</div>
+                  <div>Output Tokens: {message.output_token}</div>
                 </div>
               </>
             )}
