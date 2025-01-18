@@ -51,7 +51,7 @@ export const ChatInterface = () => {
   return (
     <Ctx.Provider value={storeValue}>
       <div className="flex h-screen dark bg-gray-950">
-        <div className="w-64 border-r p-4 bg-gray-900 border-gray-700">
+        <div className="w-64 border-r p-4 bg-gray-900 border-gray-700 h-screen overflow-y-auto">
           <div className="flex items-center gap-2 mb-6">
             <Bot className="h-6 w-6 text-white" />
             <h1 className="text-xl font-bold text-white">AI Chat</h1>
@@ -68,9 +68,8 @@ export const ChatInterface = () => {
             <History className="h-4 w-4" />
             <span className="font-medium">Chat History</span>
           </div>
-          <div className="h-[calc(100vh-200px)]">
-            <ChatHistory selectedChatId={selectedChatId} />
-          </div>
+
+          <ChatHistory selectedChatId={selectedChatId} />
         </div>
 
         <div className="flex-1 flex flex-col max-h-screen max-w-[calc(100vw-16rem)]">
