@@ -7,12 +7,17 @@ pre {
 }
 
 code {
-  @apply bg-gray-800 p-2 rounded-md;
+  @apply inline-block bg-gray-800 px-1 mx-1 my-[0.12rem] rounded-md;
 }
 
 pre code {
   @apply block w-full h-full overflow-x-auto;
 }
+
+hr {
+  @apply my-4 border-gray-600;
+}
+
 /* ************************ Scrollbar styles ************************ */
 
 /* Width of scroll bar */

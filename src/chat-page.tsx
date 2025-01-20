@@ -85,7 +85,7 @@ export const ChatInterface = () => {
                 // onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 className={clsx(
                   'bg-transparent text-sm text-white placeholder:text-zinc-400 focus-visible:ring-gray-300 rounded-md border p-2 focus-visible:ring-1 disabled:opacity-50',
-                  'h-auto max-h-96 w-full overflow-hidden resize-none flex-1'
+                  'h-auto max-h-96 w-full overflow-auto resize-none flex-1'
                 )}
                 placeholder="Type your message..."
                 onInput={handleTextInputSize}
