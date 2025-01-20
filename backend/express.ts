@@ -1,5 +1,5 @@
 import express from 'express'
-import { deleteChat, getAllChats, getAllMessages, replyChat, startChat } from './server'
+import { deleteChat, deleteMessage, getAllChats, getAllMessages, replyChat, startChat } from './server'
 
 export const app = express()
 
@@ -12,3 +12,4 @@ app.post('/api/chats/start', startChat)
 app.post('/api/chats/:id/reply', replyChat)
 app.delete('/api/chats/:id', deleteChat)
 app.get('/api/chats/:id/messages', getAllMessages)
+app.delete('/api/messages/:id', deleteMessage)

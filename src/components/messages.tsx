@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
+import { Trash2 } from 'lucide-react'
 import { ScrollArea } from './scroll-area'
 import { Markdown } from './markdown'
 import { Avatar } from './avatar'
@@ -13,6 +14,18 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
     queryFn: () => fetch(`${baseUrl}/api/chats/${chatId}/messages`).then((res) => res.json()),
   })
 
+  const queryClient = useQueryClient()
+
+  const { mutate: deleteMessage } = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`${baseUrl}/api/messages/${id}`, { method: 'DELETE' })
+      return response.json()
+    },
+    onSuccess: (_) => {
+      queryClient.invalidateQueries({ queryKey: ['chat', chatId] })
+    },
+  })
+
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -24,6 +37,11 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
   useEffect(() => {
     scrollToBottom()
   }, [data])
+
+  function deleteChat(messageId: number) {
+    const confirmed = window.confirm('Are you sure?')
+    if (confirmed) deleteMessage(messageId)
+  }
 
   if (data == null) return <div className="flex-1 text-2xl"></div>
 
@@ -41,8 +59,12 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
               <>
                 <hr />
                 <div className="flex justify-between font-light">
-                  <div className="font-light mr-10">Input Tokens: {message.input_token}</div>
-                  <div>Output Tokens: {message.output_token}</div>
+                  <div className="font-light mr-10">
+                    Tokens: {message.input_token} (Input), {message.output_token} (Output)
+                  </div>
+                  <div>
+                    <Trash2 className="text-red-700" onClick={(_) => deleteChat(message.id)} />
+                  </div>
                 </div>
               </>
             )}

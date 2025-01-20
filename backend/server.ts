@@ -128,6 +128,12 @@ export async function deleteChat(req: Request, res: Response) {
   res.json('"OK"')
 }
 
+export async function deleteMessage(req: Request, res: Response) {
+  const messageId = req.params.id
+  await db.execute('DELETE FROM messages WHERE id = ?;', [messageId])
+  res.json('"OK"')
+}
+
 process.on('SIGINT', () => {
   db.close()
   process.exit()
