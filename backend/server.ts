@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
-import { SQLiteClient } from './sqlite'
-import { AiResponse, bedrock, deepSeek } from './ai-apis'
-import { generateTitle } from './title-gen'
+import { SQLiteClient } from './sqlite.ts'
+import { bedrock, deepSeek, type AiResponse } from './ai-apis.ts'
+import { generateTitle } from './title-gen.ts'
 
 const db = new SQLiteClient('./chats.db')
 

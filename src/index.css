@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
 
 pre {
   @apply relative bg-gray-800 p-2 my-3 rounded-md w-full h-full overflow-x-hidden;
@@ -32,7 +32,7 @@ hr {
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  @apply rounded-sm bg-gray-500;
+  @apply rounded-xs bg-gray-500;
 }
 
 /* Handle on hover */

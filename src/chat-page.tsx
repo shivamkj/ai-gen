@@ -59,7 +59,7 @@ export const ChatInterface = () => {
 
           <button
             type="button"
-            className="w-full text-white focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-blue-800"
+            className="w-full text-white focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4 bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-blue-800"
             onClick={() => setChat(undefined)}>
             New Chat
           </button>
@@ -72,7 +72,7 @@ export const ChatInterface = () => {
           <ChatHistory selectedChatId={selectedChatId} />
         </div>
 
-        <div className="flex-1 flex flex-col max-h-screen max-w-[calc(100vw-16rem)]">
+        <div className="flex-1 flex flex-col h-screen max-w-[calc(100vw-16rem)]">
           <SelectModel chatId={selectedChatId} />
 
           <Messages chatId={selectedChatId} />
@@ -91,7 +91,7 @@ export const ChatInterface = () => {
                 onInput={handleTextInputSize}
                 ref={inputRef}
               />
-              <button className="border border-gray-500 rounded px-6 size-16" onClick={handleSend}>
+              <button className="border border-gray-500 rounded-sm px-6 size-16" onClick={handleSend}>
                 <Send className="h-4 w-4 text-white" />
               </button>
             </div>

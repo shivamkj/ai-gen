@@ -28,7 +28,7 @@ export class SQLiteClient {
   }
 
   // Execute a query and return rows
-  async query<T>(sql: string, params = <any>[]): Promise<T[]> {
+  async query<T>(sql: string, params = [] as any[]): Promise<T[]> {
     return new Promise((resolve, reject) => {
       this.db.all(sql, params, (err, rows) => {
         if (err) {
@@ -41,7 +41,7 @@ export class SQLiteClient {
   }
 
   // Execute a query and return a single row
-  async queryOne<T>(sql: string, params = <any>[]): Promise<T> {
+  async queryOne<T>(sql: string, params = [] as any[]): Promise<T> {
     return new Promise((resolve, reject) => {
       this.db.get(sql, params, (err, row) => {
         if (err) {
@@ -54,7 +54,7 @@ export class SQLiteClient {
   }
 
   // Execute a query without returning rows (e.g., INSERT, UPDATE, DELETE)
-  async execute(sql: string, params = <any>[]): Promise<ExecuteReturn> {
+  async execute(sql: string, params = [] as any[]): Promise<ExecuteReturn> {
     return new Promise((resolve, reject) => {
       this.db.run(sql, params, function (err) {
         if (err) {

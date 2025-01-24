@@ -35,7 +35,7 @@ export function ChatHistory({ selectedChatId }: { selectedChatId: number | undef
         <div
           key={chat.id}
           className={clsx(
-            `p-2 hover:bg-gray-700 rounded cursor-pointer flex justify-between items-center`,
+            `p-2 hover:bg-gray-700 rounded-sm cursor-pointer flex justify-between items-center`,
             selectedChatId == chat.id && 'bg-gray-800'
           )}
           onClick={() => setChat(chat.id)}>

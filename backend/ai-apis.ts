@@ -5,11 +5,6 @@ import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedroc
 
 const envSecret = dotenv.parse(readFileSync('./.env.development.local'))
 
-const enum Providers {
-  deepSeek,
-  bedrock,
-}
-
 export interface AiResponse {
   content: string
   input_token: number | undefined
