@@ -18,6 +18,14 @@ hr {
   @apply my-4 border-gray-600;
 }
 
+ol {
+  @apply list-decimal pl-8;
+}
+
+ul {
+  @apply list-disc pl-8;
+}
+
 /* ************************ Scrollbar styles ************************ */
 
 /* Width of scroll bar */
