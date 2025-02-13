@@ -55,19 +55,19 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
               message.role === 'user' && 'bg-blue-500 text-white ml-auto'
             )}>
             <Markdown content={message.content} />
-            {message.output_token != null && (
-              <>
-                <hr />
-                <div className="flex justify-between font-light">
-                  <div className="font-light mr-10">
-                    Tokens: {message.input_token} (Input), {message.output_token} (Output)
-                  </div>
-                  <div>
-                    <Trash2 className="text-red-700" onClick={(_) => deleteChat(message.id)} />
-                  </div>
+            <hr />
+            <div className="flex justify-between font-light">
+              {message.output_token != null ? (
+                <div className="font-light mr-10">
+                  Tokens: {message.input_token} (Input), {message.output_token} (Output)
                 </div>
-              </>
-            )}
+              ) : (
+                <div />
+              )}
+              <div>
+                <Trash2 className="text-red-700" onClick={(_) => deleteChat(message.id)} />
+              </div>
+            </div>
           </div>
           <Avatar className="mx-6" initials={message.role === 'user' ? 'YOU' : 'AI'} />
         </div>
