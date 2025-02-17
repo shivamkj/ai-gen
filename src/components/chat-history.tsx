@@ -27,6 +27,11 @@ export function ChatHistory({ selectedChatId }: { selectedChatId: number | undef
     },
   })
 
+  function handleDeleteChat(messageId: number) {
+    const confirmed = window.confirm('Are you sure?')
+    if (confirmed) deleteChat(messageId)
+  }
+
   if (isPending) return <div>Loading</div>
 
   return (
@@ -45,7 +50,7 @@ export function ChatHistory({ selectedChatId }: { selectedChatId: number | undef
             </div>
             <div className={`text-sm text-gray-500`}>{chat.created_at}</div>
           </div>
-          <Trash2Icon className="text-red-600 size-5 shrink-0" onClick={() => deleteChat(chat.id)} />
+          <Trash2Icon className="text-red-600 size-5 shrink-0" onClick={() => handleDeleteChat(chat.id)} />
         </div>
       ))}
     </>
