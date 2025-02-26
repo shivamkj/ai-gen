@@ -3,12 +3,12 @@ import { Ctx } from '@/chat-page'
 
 export const models = [
   {
-    name: 'Deepseek v3',
-    modelId: 'deepseek-chat',
-  },
-  {
     name: 'Claude 3.5 Sonnet',
     modelId: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+  },
+  {
+    name: 'Deepseek v3',
+    modelId: 'deepseek-chat',
   },
 ]
 
