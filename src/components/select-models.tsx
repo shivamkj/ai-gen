@@ -3,6 +3,10 @@ import { Ctx } from '@/chat-page'
 
 export const models = [
   {
+    name: 'Claude 3.7 Sonnet',
+    modelId: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
+  },
+  {
     name: 'Claude 3.5 Sonnet',
     modelId: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
   },
