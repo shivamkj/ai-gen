@@ -80,7 +80,7 @@ export async function startChat(req: Request, res: Response) {
   const result = await db.execute('INSERT INTO chats (model, title) VALUES (?, ?)', [model, title])
   const chatId = result.lastID as any
 
-  const finalMessage = systemPrompt + message
+  const finalMessage = `${systemPrompt}\n${message}`
   const response = await processChat(chatId, finalMessage, model as string)
   res.json({ chat: { id: chatId, model, createdAt: new Date().toISOString() }, response })
 }
