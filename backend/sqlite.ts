@@ -1,81 +1,44 @@
-import sqlite3 from 'sqlite3'
+// @ts-expect-error
+import Database from 'better-sqlite3'
 
 type ExecuteReturn = { lastID: number; changes: number }
 
 export class SQLiteClient {
-  db: sqlite3.Database
+  db: Database
 
   constructor(filename: string) {
-    const sqliteVerbose = sqlite3.verbose()
-    this.db = new sqliteVerbose.Database(filename)
+    this.db = new Database(filename)
   }
 
-  // Serialize database operations
+  // Serialize database operations (better-sqlite3 handles transactions synchronously)
   async transaction(callback: () => Promise<any>) {
-    return new Promise((resolve, reject) => {
-      this.db.serialize(async () => {
-        try {
-          this.db.exec('BEGIN')
-          const result = await callback()
-          this.db.exec('COMMIT')
-          resolve(result)
-        } catch (error) {
-          this.db.exec('ROLLBACK')
-          reject(error)
-        }
-      })
-    })
+    const transaction = this.db.transaction(callback)
+    try {
+      return await transaction()
+    } catch (error) {
+      throw error
+    }
   }
 
   // Execute a query and return rows
-  async query<T>(sql: string, params = [] as any[]): Promise<T[]> {
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, params, (err, rows) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(rows as T[])
-        }
-      })
-    })
+  async query<T>(sql: string, params: any[] = []): Promise<T[]> {
+    return this.db.prepare(sql).all(params) as T[]
   }
 
   // Execute a query and return a single row
-  async queryOne<T>(sql: string, params = [] as any[]): Promise<T> {
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, params, (err, row) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(row as T)
-        }
-      })
-    })
+  async queryOne<T>(sql: string, params: any[] = []): Promise<T> {
+    return this.db.prepare(sql).get(params) as T
   }
 
   // Execute a query without returning rows (e.g., INSERT, UPDATE, DELETE)
-  async execute(sql: string, params = [] as any[]): Promise<ExecuteReturn> {
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function (err) {
-        if (err) {
-          reject(err)
-        } else {
-          resolve({ lastID: this.lastID, changes: this.changes })
-        }
-      })
-    })
+  async execute(sql: string, params: any[] = []): Promise<ExecuteReturn> {
+    const stmt = this.db.prepare(sql)
+    const result = stmt.run(params)
+    return { lastID: result.lastInsertRowid as number, changes: result.changes }
   }
 
   // Close the database connection
   async close() {
-    return new Promise((resolve, reject) => {
-      this.db.close((err) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(null)
-        }
-      })
-    })
+    this.db.close()
   }
 }
