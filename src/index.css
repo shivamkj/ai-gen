@@ -14,6 +14,10 @@ pre code {
   @apply block w-full h-full overflow-x-auto;
 }
 
+a {
+  @apply underline text-blue-600;
+}
+
 hr {
   @apply my-4 border-gray-600;
 }
