@@ -11,7 +11,7 @@ export interface AiResponse {
   output_token: number | undefined
 }
 
-const maxTokens = 4096
+const maxTokens = 12000
 
 const deepSeekModel = new OpenAI({ baseURL: 'https://api.deepseek.com/v1', apiKey: envSecret.DEEPSEEK_API_KEY })
 

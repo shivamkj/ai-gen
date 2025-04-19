@@ -26,8 +26,11 @@ export default function useAICompletion(chatId: number | undefined, chatStore: S
       url.searchParams.append('message', prompt)
       return fetch(url, { method: 'POST' }).then((resp) => resp.json())
     },
-    onError: (error) => {
+    onError: (error, prompt) => {
       console.error(error)
+      console.log('==prompt==')
+      console.log(prompt)
+      console.log('==prompt==')
       showErrorToast(`Unexpected Error Occured: ${error?.name}: ${error?.message}`)
     },
     onSuccess: (data) => {
