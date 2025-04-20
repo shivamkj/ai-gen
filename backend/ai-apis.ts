@@ -11,7 +11,7 @@ export interface AiResponse {
   output_token: number | undefined
 }
 
-const maxTokens = 12000
+const maxTokens = 14000
 
 const deepSeekModel = new OpenAI({ baseURL: 'https://api.deepseek.com/v1', apiKey: envSecret.DEEPSEEK_API_KEY })
 
@@ -20,7 +20,7 @@ export async function deepSeek(model: string, messages: any[]): Promise<AiRespon
     model: model,
     messages: messages,
     temperature: 0,
-    max_tokens: maxTokens,
+    max_tokens: 8192, // deepseek only support upto this max token
   })
 
   return {
