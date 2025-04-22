@@ -72,7 +72,7 @@ export async function processChat(chatId: string, message: string, model: string
 const systemPrompt = "You are an AI programming assistant. Don't explain code unless asked. "
 
 export async function startChat(req: Request, res: Response) {
-  const { message, model } = req.query
+  const { message, model } = req.body
   if (!message || !model) throw new Error('message & model startChat')
 
   const title = generateTitle(message as string)

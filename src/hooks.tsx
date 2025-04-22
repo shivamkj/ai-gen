@@ -18,9 +18,9 @@ export default function useAICompletion(chatId: number | undefined, chatStore: S
     mutationFn: async (prompt: string) => {
       if (chatId == null) {
         const url = new URL('/api/chats/start', baseUrl)
-        url.searchParams.append('message', prompt)
-        url.searchParams.append('model', model)
-        return await fetch(url, { method: 'POST' }).then((resp) => resp.json())
+        const body = JSON.stringify({ message: prompt, model })
+        const resp = await fetch(url, { method: 'POST', body, headers: { 'Content-Type': 'application/json' } })
+        return resp.json()
       }
       const url = new URL(`/api/chats/${chatId}/reply`, baseUrl)
       url.searchParams.append('message', prompt)

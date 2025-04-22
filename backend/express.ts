@@ -15,7 +15,7 @@ if (process.argv[1].endsWith('backend/express.ts')) {
 }
 
 app.get('/api/chats', getAllChats)
-app.post('/api/chats/start', startChat)
+app.post('/api/chats/start', express.json(), startChat)
 app.post('/api/chats/:id/reply', replyChat)
 app.delete('/api/chats/:id', deleteChat)
 app.get('/api/chats/:id/messages', getAllMessages)
