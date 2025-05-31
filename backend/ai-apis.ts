@@ -11,7 +11,6 @@ export interface AiResponse {
   output_token: number | undefined
 }
 
-const maxTokens = 14000
 
 const deepSeekModel = new OpenAI({ baseURL: 'https://api.deepseek.com/v1', apiKey: envSecret.DEEPSEEK_API_KEY })
 
@@ -45,7 +44,7 @@ export async function bedrock(model: string, messages: any[]): Promise<AiRespons
     accept: 'application/json',
     body: JSON.stringify({
       anthropic_version: 'bedrock-2023-05-31',
-      max_tokens: maxTokens,
+      max_tokens: 20000,
       messages: messages,
       temperature: 0.2,
     }),
