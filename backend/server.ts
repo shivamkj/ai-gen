@@ -6,8 +6,8 @@ import { generateTitle } from './title-gen.ts'
 const db = new SQLiteClient('./chats.db')
 
 // Create tables
-await db.transaction(async () => {
-  await db.execute(`
+db.transaction(() => {
+  db.execute(`
     CREATE TABLE IF NOT EXISTS chats (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       model TEXT NOT NULL,
@@ -16,7 +16,7 @@ await db.transaction(async () => {
     )
   `)
 
-  await db.execute(`
+  db.execute(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       chat_id INTEGER,
@@ -31,42 +31,31 @@ await db.transaction(async () => {
 })
 
 export async function processChat(chatId: string, message: string, model: string) {
-  return db.transaction(async () => {
-    type MessageRows = { role: string; content: string }
-    // Get old messages
-    const messages = await db.query<MessageRows>(
-      'SELECT role, content FROM messages WHERE chat_id = ? ORDER BY created_at ASC',
-      [chatId]
-    )
-    messages.push({ role: 'user', content: message }) // Add new message
+  type MessageRows = { role: string; content: string }
+  // Get old messages
+  const messages = await db.query<MessageRows>(
+    'SELECT role, content FROM messages WHERE chat_id = ? ORDER BY created_at ASC',
+    [chatId]
+  )
+  messages.push({ role: 'user', content: message }) // Add new message
 
-    let aiResponse: AiResponse
+  let aiResponse: AiResponse
 
-    if (model.startsWith('deepseek')) {
-      aiResponse = await deepSeek(model, messages)
-    } else if (model.startsWith('us.')) {
-      aiResponse = await bedrock(model, messages)
-    } else {
-      throw new Error('Unknown model error')
-    }
+  if (model.startsWith('deepseek')) {
+    aiResponse = await deepSeek(model, messages)
+  } else if (model.startsWith('us.')) {
+    aiResponse = await bedrock(model, messages)
+  } else {
+    throw new Error('Unknown model error')
+  }
 
-    // Save user & assistant response
-    await db.execute(
-      'INSERT INTO messages (chat_id, role, content, input_token, output_token) VALUES (?, ?, ?, NULL, NULL), (?, ?, ?, ?, ?)',
-      [
-        chatId,
-        'user',
-        message,
-        chatId,
-        'assistant',
-        aiResponse.content,
-        aiResponse.input_token,
-        aiResponse.output_token,
-      ]
-    )
+  // Save user & assistant response
+  await db.execute(
+    'INSERT INTO messages (chat_id, role, content, input_token, output_token) VALUES (?, ?, ?, NULL, NULL), (?, ?, ?, ?, ?)',
+    [chatId, 'user', message, chatId, 'assistant', aiResponse.content, aiResponse.input_token, aiResponse.output_token]
+  )
 
-    return aiResponse
-  })
+  return aiResponse
 }
 
 const systemPrompt = "You are an AI programming assistant. Don't explain code unless asked. "
@@ -120,9 +109,9 @@ export async function getAllChats(_: Request, res: Response) {
 export async function deleteChat(req: Request, res: Response) {
   const chatId = req.params.id
 
-  await db.transaction(async () => {
-    await db.execute('DELETE FROM messages WHERE chat_id = ?;', [chatId])
-    await db.execute('DELETE FROM chats WHERE id = ?;', [chatId])
+  await db.transaction(() => {
+    db.execute('DELETE FROM messages WHERE chat_id = ?;', [chatId])
+    db.execute('DELETE FROM chats WHERE id = ?;', [chatId])
   })
 
   res.json('"OK"')

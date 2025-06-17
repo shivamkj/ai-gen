@@ -11,7 +11,7 @@ export class SQLiteClient {
   }
 
   // Serialize database operations (better-sqlite3 handles transactions synchronously)
-  async transaction(callback: () => Promise<any>) {
+  async transaction(callback: () => void) {
     const transaction = this.db.transaction(callback)
     try {
       return await transaction()
