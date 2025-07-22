@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "prod": "node backend/express.ts",
+    "prod": "node --experimental-strip-types backend/express.ts",
     "format": "prettier . --write --list-different --cache --cache-strategy metadata",
     "preview": "vite preview"
   },
