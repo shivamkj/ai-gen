@@ -56,6 +56,6 @@ function showErrorToast(message: string) {
     position: 'left',
     stopOnFocus: true,
     style: { background: 'red' },
-    onClick: function () {}, // Callback after click
+    onClick: function () { }, // Callback after click
   }).showToast()
 }
