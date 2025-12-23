@@ -11,29 +11,29 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.830.0",
-    "@tanstack/react-query": "^5.80.7",
+    "@aws-sdk/client-bedrock-runtime": "^3.957.0",
+    "@tanstack/react-query": "^5.90.12",
     "better-sqlite3": "^11.10.0",
     "clsx": "^2.1.1",
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
     "keyword-extractor": "^0.0.28",
     "lucide-react": "^0.516.0",
     "marked": "^15.0.12",
-    "openai": "^5.5.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "tailwindcss": "^4.1.10",
+    "openai": "^5.23.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tailwindcss": "^4.1.18",
     "toastify-js": "^1.12.0",
-    "zustand": "^5.0.5"
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.10",
-    "@types/express": "^5.0.3",
-    "@types/react": "^19.1.8",
-    "@vitejs/plugin-react": "^4.5.2",
-    "prettier": "^3.5.3",
-    "vite": "^6.3.5"
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/express": "^5.0.6",
+    "@types/react": "^19.2.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "prettier": "^3.7.4",
+    "vite": "^6.4.1"
   },
   "prettier": {
     "$schema": "http://json.schemastore.org/prettierrc",
