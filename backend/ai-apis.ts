@@ -15,9 +15,23 @@ export interface AiResponse {
 const deepSeekModel = new OpenAI({ baseURL: 'https://api.deepseek.com/v1', apiKey: envSecret.DEEPSEEK_API_KEY })
 
 export async function deepSeek(model: string, messages: any[]): Promise<AiResponse> {
+  // Convert image messages to OpenAI format
+  const formattedMessages = messages.map((msg) => {
+    if (msg.image_data) {
+      return {
+        role: msg.role,
+        content: [
+          { type: 'text', text: msg.content || 'What is in this image?' },
+          { type: 'image_url', image_url: { url: msg.image_data } },
+        ],
+      }
+    }
+    return msg
+  })
+
   const completion = await deepSeekModel.chat.completions.create({
     model: model,
-    messages: messages,
+    messages: formattedMessages,
     temperature: 0,
     max_tokens: 8192, // deepseek only support upto this max token
   })
@@ -38,6 +52,33 @@ const bedrockClient = new BedrockRuntimeClient({
 })
 
 export async function bedrock(model: string, messages: any[]): Promise<AiResponse> {
+  // Convert messages to Anthropic format with image support
+  const formattedMessages = messages.map((msg) => {
+    if (msg.image_data) {
+      // Extract base64 data and media type from data URL
+      const matches = msg.image_data.match(/^data:(.+);base64,(.+)$/)
+      if (matches) {
+        const mediaType = matches[1]
+        const base64Data = matches[2]
+        return {
+          role: msg.role,
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mediaType,
+                data: base64Data,
+              },
+            },
+            { type: 'text', text: msg.content || 'What is in this image?' },
+          ],
+        }
+      }
+    }
+    return { role: msg.role, content: msg.content }
+  })
+
   const command = new InvokeModelCommand({
     modelId: model,
     contentType: 'application/json',
@@ -45,7 +86,7 @@ export async function bedrock(model: string, messages: any[]): Promise<AiRespons
     body: JSON.stringify({
       anthropic_version: 'bedrock-2023-05-31',
       max_tokens: 20000,
-      messages: messages,
+      messages: formattedMessages,
       temperature: 0.2,
     }),
   })

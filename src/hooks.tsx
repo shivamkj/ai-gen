@@ -15,22 +15,24 @@ export default function useAICompletion(chatId: number | undefined, chatStore: S
 
   const { mutate, error, isPending } = useMutation({
     mutationKey: ['chat', chatId],
-    mutationFn: async (prompt: string) => {
+    mutationFn: async (data: { message: string; imageData?: string }) => {
       if (chatId == null) {
         const url = new URL('/api/chats/start', baseUrl)
-        const body = JSON.stringify({ message: prompt, model })
+        const body = JSON.stringify({ message: data.message, model, imageData: data.imageData })
         const resp = await fetch(url, { method: 'POST', body, headers: { 'Content-Type': 'application/json' } })
         return resp.json()
       }
       const url = new URL(`/api/chats/${chatId}/reply`, baseUrl)
-      url.searchParams.append('message', prompt)
-      return fetch(url, { method: 'POST' }).then((resp) => resp.json())
+      const body = JSON.stringify({ message: data.message, imageData: data.imageData })
+      return fetch(url, { method: 'POST', body, headers: { 'Content-Type': 'application/json' } }).then((resp) =>
+        resp.json()
+      )
     },
-    onError: (error, prompt) => {
+    onError: (error, data) => {
       console.error(error)
-      console.log('==prompt==')
-      console.log(prompt)
-      console.log('==prompt==')
+      console.log('==data==')
+      console.log(data)
+      console.log('==data==')
       showErrorToast(`Unexpected Error Occured: ${error?.name}: ${error?.message}`)
     },
     onSuccess: (data) => {

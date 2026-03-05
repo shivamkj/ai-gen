@@ -1,5 +1,5 @@
-import { createContext, useRef } from 'react'
-import { Send, Bot, History } from 'lucide-react'
+import { createContext, useRef, useState } from 'react'
+import { Send, Bot, History, ImagePlus, X } from 'lucide-react'
 import { ContextVal, initStore, StoreI, SetState } from './global-state'
 import { useStore } from 'zustand'
 import clsx from 'clsx'
@@ -35,17 +35,46 @@ function handleTextInputSize(e: React.FormEvent<HTMLTextAreaElement>) {
 
 export const ChatInterface = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const storeValue = initStore<StoreI<ChatStore>>(chatStore)
   const selectedChatId = useStore(storeValue, (s) => s.seletedChatId)
   const { setChat } = storeValue.getState()
   const { mutate, isPending } = useAICompletion(selectedChatId, storeValue)
 
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    // Convert to base64
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const result = e.target?.result as string
+      setSelectedImage(result)
+    }
+    reader.readAsDataURL(file)
+  }
+
   function handleSend() {
     if (inputRef.current == null) return
     const input = inputRef.current!.value.trim()
     inputRef.current.value = ''
-    if (!input) return
-    mutate(input)
+    if (!input && !selectedImage) return
+    mutate({ message: input || 'What is in this image?', imageData: selectedImage || undefined })
+    setSelectedImage(null)
+  }
+
+  function clearImage() {
+    setSelectedImage(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   return (
@@ -80,7 +109,30 @@ export const ChatInterface = () => {
           {isPending && <Loader />}
 
           <div className="p-4 border-t bg-gray-900 border-gray-500">
+            {selectedImage && (
+              <div className="mb-2 relative inline-block">
+                <img src={selectedImage} alt="Selected" className="max-h-32 rounded-lg border border-gray-500" />
+                <button
+                  onClick={clearImage}
+                  className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 hover:bg-red-600">
+                  <X className="h-4 w-4 text-white" />
+                </button>
+              </div>
+            )}
             <div className="flex gap-2 items-center">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageSelect}
+                accept="image/*"
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="border border-gray-500 rounded-sm p-4 hover:bg-gray-800"
+                title="Upload image">
+                <ImagePlus className="h-4 w-4 text-white" />
+              </button>
               <textarea
                 // onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 className={clsx(

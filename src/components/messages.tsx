@@ -58,6 +58,15 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
               `border-zinc-800 bg-gray-900 shadow-lg text-zinc-50 rounded-xl border p-6 overflow-x-hidden`,
               message.role == 'user' && 'bg-blue-500 text-white ml-auto'
             )}>
+            {message.image_data && (
+              <div className="mb-4">
+                <img
+                  src={message.image_data}
+                  alt="Uploaded"
+                  className="max-w-full max-h-96 rounded-lg border border-gray-500"
+                />
+              </div>
+            )}
             <Markdown content={message.content} />
             <hr />
             <div className="flex justify-between font-light">

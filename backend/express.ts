@@ -4,6 +4,9 @@ import { deleteChat, deleteMessage, getAllChats, getAllMessages, replyChat, star
 const PORT = 6712
 export const app = express()
 
+// Increase payload size limit for image uploads (base64 encoded)
+app.use(express.json({ limit: '5mb' }))
+
 // Define your Express routes
 app.get('/api/test', (_, res) => {
   res.json({ message: 'OK' })
@@ -15,7 +18,7 @@ if (process.argv[1].endsWith('backend/express.ts')) {
 }
 
 app.get('/api/chats', getAllChats)
-app.post('/api/chats/start', express.json(), startChat)
+app.post('/api/chats/start', startChat)
 app.post('/api/chats/:id/reply', replyChat)
 app.delete('/api/chats/:id', deleteChat)
 app.get('/api/chats/:id/messages', getAllMessages)

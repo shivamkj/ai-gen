@@ -22,6 +22,7 @@ db.transaction(() => {
       chat_id INTEGER,
       role TEXT CHECK(role IN ('user', 'assistant', 'system')),
       content TEXT,
+      image_data TEXT,
       input_token INTEGER,
       output_token INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -30,14 +31,28 @@ db.transaction(() => {
   `)
 })
 
-export async function processChat(chatId: string, message: string, model: string) {
-  type MessageRows = { role: string; content: string }
+// Migration: Add image_data column if it doesn't exist (outside transaction)
+;(async () => {
+  try {
+    const columns = await db.query('PRAGMA table_info(messages)')
+    const hasImageData = columns.some((col: any) => col.name === 'image_data')
+    if (!hasImageData) {
+      await db.execute('ALTER TABLE messages ADD COLUMN image_data TEXT')
+      console.log('Added image_data column to messages table')
+    }
+  } catch (error) {
+    // Table doesn't exist yet or other error
+  }
+})()
+
+export async function processChat(chatId: string, message: string, model: string, imageData?: string) {
+  type MessageRows = { role: string; content: string; image_data: string | null }
   // Get old messages
   const messages = await db.query<MessageRows>(
-    'SELECT role, content FROM messages WHERE chat_id = ? ORDER BY created_at ASC',
+    'SELECT role, content, image_data FROM messages WHERE chat_id = ? ORDER BY created_at ASC',
     [chatId]
   )
-  messages.push({ role: 'user', content: message }) // Add new message
+  messages.push({ role: 'user', content: message, image_data: imageData || null }) // Add new message
 
   let aiResponse: AiResponse
 
@@ -51,8 +66,18 @@ export async function processChat(chatId: string, message: string, model: string
 
   // Save user & assistant response
   await db.execute(
-    'INSERT INTO messages (chat_id, role, content, input_token, output_token) VALUES (?, ?, ?, NULL, NULL), (?, ?, ?, ?, ?)',
-    [chatId, 'user', message, chatId, 'assistant', aiResponse.content, aiResponse.input_token, aiResponse.output_token]
+    'INSERT INTO messages (chat_id, role, content, image_data, input_token, output_token) VALUES (?, ?, ?, ?, NULL, NULL), (?, ?, ?, NULL, ?, ?)',
+    [
+      chatId,
+      'user',
+      message,
+      imageData || null,
+      chatId,
+      'assistant',
+      aiResponse.content,
+      aiResponse.input_token,
+      aiResponse.output_token,
+    ]
   )
 
   return aiResponse
@@ -61,7 +86,7 @@ export async function processChat(chatId: string, message: string, model: string
 const systemPrompt = "You are an AI programming assistant. Don't explain code unless asked. "
 
 export async function startChat(req: Request, res: Response) {
-  const { message, model } = req.body
+  const { message, model, imageData } = req.body
   if (!message || !model) throw new Error('message & model startChat')
 
   const title = generateTitle(message as string)
@@ -70,20 +95,20 @@ export async function startChat(req: Request, res: Response) {
   const chatId = result.lastID as any
 
   const finalMessage = `${systemPrompt}\n${message}`
-  const response = await processChat(chatId, finalMessage, model as string)
+  const response = await processChat(chatId, finalMessage, model as string, imageData)
   res.json({ chat: { id: chatId, model, createdAt: new Date().toISOString() }, response })
 }
 
 // Reply to chat with streaming
 export async function replyChat(req: Request, res: Response) {
   const { id } = req.params
-  const { message } = req.query
+  const { message, imageData } = req.body
   if (!message) throw new Error('chatId & message startChat')
 
   // Get model used for this chat
   const { model } = await db.queryOne<{ model: string }>('SELECT model FROM chats WHERE id = ?', [id])
 
-  const response = await processChat(id, message as string, model)
+  const response = await processChat(id, message as string, model, imageData as string | undefined)
   res.json(response)
 }
 
@@ -92,7 +117,7 @@ export async function getAllMessages(req: Request, res: Response) {
   const chatId = req.params.id
 
   const messges = await db.query(
-    `SELECT m.id, m.role, m.content, m.created_at, m.input_token, m.output_token
+    `SELECT m.id, m.role, m.content, m.image_data, m.created_at, m.input_token, m.output_token
          FROM messages m
          WHERE m.chat_id = ?
          ORDER BY m.created_at ASC`,
