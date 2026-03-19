@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"gen-ai/providers"
 	"io/fs"
 	"log"
 	"net/http"
@@ -32,6 +33,11 @@ func main() {
 		closeDB()
 		os.Exit(0)
 	}()
+
+	providerRegistry = map[string]providers.Provider{
+		"deepseek": &providers.OpenAI{BaseURL: "https://api.deepseek.com/v1", APIKey: os.Getenv("DEEPSEEK_API_KEY")},
+		"bedrock":  &providers.Bedrock{},
+	}
 
 	mux := http.NewServeMux()
 

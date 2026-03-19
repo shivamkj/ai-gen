@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -168,61 +167,4 @@ func handleDeleteMessage(w http.ResponseWriter, r *http.Request) {
 	messageID := r.PathValue("id")
 	db.Exec(`DELETE FROM messages WHERE id = ?`, messageID)
 	writeJSON(w, "OK")
-}
-
-// processChat fetches chat history, calls the AI, and saves both messages to DB.
-func processChat(chatID any, message, model, provider, imageData string) (*AiResponse, error) {
-	rows, err := db.Query(
-		`SELECT role, content, image_data FROM messages WHERE chat_id = ? ORDER BY created_at ASC`,
-		chatID,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var messages []Message
-	for rows.Next() {
-		var m Message
-		var imgData *string
-		if err := rows.Scan(&m.Role, &m.Content, &imgData); err != nil {
-			return nil, err
-		}
-		if imgData != nil {
-			m.ImageData = *imgData
-		}
-		messages = append(messages, m)
-	}
-	// Append the new user message for context
-	messages = append(messages, Message{Role: "user", Content: message, ImageData: imageData})
-
-	var aiResp *AiResponse
-	switch provider {
-	case "deepseek":
-		aiResp, err = callDeepSeek(model, messages)
-	case "bedrock":
-		aiResp, err = callBedrock(model, messages)
-	default:
-		return nil, fmt.Errorf("unknown provider: %s", provider)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	// Persist user message + assistant response
-	var imgVal any
-	if imageData != "" {
-		imgVal = imageData
-	}
-	_, err = db.Exec(
-		`INSERT INTO messages (chat_id, role, content, image_data, input_token, output_token)
-		 VALUES (?, ?, ?, ?, NULL, NULL),
-		        (?, ?, ?, NULL, ?, ?)`,
-		chatID, "user", message, imgVal,
-		chatID, "assistant", aiResp.Content, aiResp.InputToken, aiResp.OutputToken,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return aiResp, nil
 }
