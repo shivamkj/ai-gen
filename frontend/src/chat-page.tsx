@@ -23,7 +23,9 @@ function chatStore(set: SetState<ChatStore>): StoreI<ChatStore> {
     seletedChatId: undefined,
     selectedModel: models[0].modelId,
     selectedProvider: models[0].provider,
-    setModelAndProvider: (modelId, provider) => set((prev) => ({ ...prev, selectedModel: modelId, selectedProvider: provider })),
+    setModelAndProvider: (modelId, provider) => {
+      set((prev) => ({ ...prev, selectedModel: modelId, selectedProvider: provider }))
+    },
     setChat: (chatId) => set((prev) => ({ ...prev, seletedChatId: chatId })),
   }
 }

@@ -11,9 +11,7 @@ const modelsByProvider: Record<string, { label: string; models: { name: string; 
   },
   deepseek: {
     label: 'Deepseek',
-    models: [
-      { name: 'Deepseek v3', modelId: 'deepseek-chat' },
-    ],
+    models: [{ name: 'Deepseek v3', modelId: 'deepseek-chat' }],
   },
 }
 

@@ -5,10 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "format": "prettier . --write --list-different --cache --cache-strategy metadata",
-    "preview": "./ai-gen",
-    "clean": "rm -rf ai-gen dist/",
-    "dev": "vite"
+    "format": "prettier . --write --list-different --cache --cache-strategy metadata"
   },
   "dependencies": {
     "marked": "^15.0.12",
@@ -31,9 +28,6 @@
     "bracketSameLine": true
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3"
-    ],
     "ignoredBuiltDependencies": [
       "esbuild"
     ]

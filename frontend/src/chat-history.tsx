@@ -37,7 +37,10 @@ export function ChatHistory({ selectedChatId }: { selectedChatId: number | undef
         <div
           key={chat.id}
           className={`p-2 hover:bg-gray-700 rounded-sm cursor-pointer flex justify-between items-center${selectedChatId == chat.id ? ' bg-gray-800' : ''}`}
-          onClick={() => { setChat(chat.id); setModelAndProvider(chat.model, chat.provider) }}>
+          onClick={() => {
+            setChat(chat.id)
+            setModelAndProvider(chat.model, chat.provider)
+          }}>
           <div>
             <div className="text-white font-medium line-clamp-2" style={{ overflowWrap: 'anywhere' }}>
               {chat.title}
