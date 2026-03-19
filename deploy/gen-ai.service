@@ -1,0 +1,14 @@
+[Unit]
+Description=Gen-AI Chat App
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/path/to/gen-ai
+ExecStart=/path/to/gen-ai/ai-gen
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
