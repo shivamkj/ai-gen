@@ -19,8 +19,11 @@ export const models = [
   },
 ]
 
+const joinBy = '&*'
+
 export function SelectModel({ chatId: selectedChatId }: { chatId: number | undefined }) {
   const selectedModel = useStoreX(Ctx, (s) => s.selectedModel)
+  const selectedProvider = useStoreX(Ctx, (s) => s.selectedProvider)
   const { setModelAndProvider } = useAction(Ctx)
 
   return (
@@ -30,11 +33,13 @@ export function SelectModel({ chatId: selectedChatId }: { chatId: number | undef
           name="models"
           id="models"
           className="w-48 border text-sm rounded-lg block p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
-          // @ts-expect-error
-          onChange={(e) => setModelAndProvider(e.target.value, e.target.dataset.provider)}
-          value={selectedModel}>
+          onChange={(e) => {
+            const [modelId, provider] = (e.target as HTMLSelectElement).value.split(joinBy)
+            setModelAndProvider(modelId, provider)
+          }}
+          value={`${selectedModel}${joinBy}${selectedProvider}`}>
           {models.map((m, index) => (
-            <option key={index} value={m.modelId} data-provider={m.provider}>
+            <option key={index} value={`${m.modelId}${joinBy}${m.provider}`}>
               {m.name}
             </option>
           ))}
