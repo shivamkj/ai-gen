@@ -1,6 +1,4 @@
-import { StrictMode } from 'react'
-// @ts-expect-error
-import { createRoot } from 'react-dom/client'
+import { render } from 'preact'
 import './index.css'
 // @ts-expect-error
 import Temp from './temp'
@@ -9,10 +7,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient()
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ChatInterface />
-    </QueryClientProvider>
-  </StrictMode>
+render(
+  <QueryClientProvider client={queryClient}>
+    {/* @ts-expect-error */}
+    <ChatInterface />
+  </QueryClientProvider>, document.getElementById('root')!
 )

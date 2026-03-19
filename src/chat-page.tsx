@@ -1,4 +1,5 @@
-import { createContext, useRef, useState } from 'react'
+import { createContext, } from 'preact'
+import { useState, useRef } from 'preact/hooks';
 import { Send, Bot, History, ImagePlus, X } from 'lucide-react'
 import { ContextVal, initStore, StoreI, SetState } from './global-state'
 import { useStore } from 'zustand'
@@ -123,6 +124,7 @@ export const ChatInterface = () => {
               <input
                 type="file"
                 ref={fileInputRef}
+                // @ts-expect-error
                 onChange={handleImageSelect}
                 accept="image/*"
                 className="hidden"
@@ -140,6 +142,7 @@ export const ChatInterface = () => {
                   'h-auto max-h-96 w-full overflow-auto resize-none flex-1'
                 )}
                 placeholder="Type your message..."
+                // @ts-expect-error
                 onInput={handleTextInputSize}
                 ref={inputRef}
               />
