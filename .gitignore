@@ -2,3 +2,4 @@ node_modules/
 dist/
 chats.db
 /.env*
+/ai-gen

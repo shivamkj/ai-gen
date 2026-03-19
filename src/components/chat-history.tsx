@@ -10,7 +10,7 @@ type ChatHistory = { id: number; title: string; date: string }
 export function ChatHistory({ selectedChatId }: { selectedChatId: number | undefined }) {
   const { isPending, data } = useQuery<ChatHistory[]>({
     queryKey: ['chatHistory'],
-    queryFn: () => fetch(`${baseUrl}/api/chats/`).then((res) => res.json()),
+    queryFn: () => fetch(`${baseUrl}/api/chats`).then((res) => res.json()),
   })
   const { setChat } = useAction(Ctx)
 
