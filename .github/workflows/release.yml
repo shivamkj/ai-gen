@@ -17,19 +17,19 @@ jobs:
         include:
           - goos: linux
             goarch: amd64
-            artifact: ai-gen-linux-amd64
+            artifact: gen-ai-linux-amd64
           - goos: linux
             goarch: arm64
-            artifact: ai-gen-linux-arm64
+            artifact: gen-ai-linux-arm64
           - goos: windows
             goarch: amd64
-            artifact: ai-gen-windows-amd64.exe
+            artifact: gen-ai-windows-amd64.exe
           - goos: darwin
             goarch: amd64
-            artifact: ai-gen-darwin-amd64
+            artifact: gen-ai-darwin-amd64
           - goos: darwin
             goarch: arm64
-            artifact: ai-gen-darwin-arm64
+            artifact: gen-ai-darwin-arm64
 
     steps:
       - name: Checkout
@@ -107,9 +107,9 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
           files: |
-            dist/ai-gen-linux-amd64
-            dist/ai-gen-linux-arm64
-            dist/ai-gen-windows-amd64.exe
-            dist/ai-gen-darwin-amd64
-            dist/ai-gen-darwin-arm64
+            dist/gen-ai-linux-amd64
+            dist/gen-ai-linux-arm64
+            dist/gen-ai-windows-amd64.exe
+            dist/gen-ai-darwin-amd64
+            dist/gen-ai-darwin-arm64
             dist/checksums-sha256.txt
