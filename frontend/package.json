@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "build": "vite build",
     "format": "prettier . --write --list-different --cache --cache-strategy metadata",
-    "preview": "vite preview"
+    "preview": "./ai-gen",
+    "clean": "rm -rf ai-gen dist/",
+    "dev": "vite"
   },
   "dependencies": {
     "marked": "^15.0.12",

@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   server: { port: 6712 },
+  build: { outDir: '../backend/dist', emptyOutDir: true },
   plugins: [tailwindcss()],
   esbuild: {
     jsx: 'automatic',
