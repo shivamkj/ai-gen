@@ -1,6 +1,4 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query'
-// @ts-expect-error
-import Toastify from 'toastify-js'
 import { ChatStore } from './chat-page'
 import { StoreI } from './global-state'
 import { StoreApi, useStore } from 'zustand'
@@ -49,15 +47,5 @@ export default function useAICompletion(chatId: number | undefined, chatStore: S
 }
 
 function showErrorToast(message: string) {
-  Toastify({
-    text: message,
-    duration: 8000,
-    newWindow: true,
-    close: true,
-    gravity: 'top',
-    position: 'left',
-    stopOnFocus: true,
-    style: { background: 'red' },
-    onClick: function () { }, // Callback after click
-  }).showToast()
+  alert(message);
 }

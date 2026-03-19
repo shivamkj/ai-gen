@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 // @ts-expect-error
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import 'toastify-js/src/toastify.css'
 // @ts-expect-error
 import Temp from './temp'
 import { ChatInterface } from './chat-page'
