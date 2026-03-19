@@ -36,7 +36,10 @@ export function useQuery<T>({
   fnRef.current = queryFn
 
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled) {
+      setData(undefined)
+      return
+    }
     let cancelled = false
     async function run() {
       setIsPending(true)
