@@ -78,6 +78,7 @@ jobs:
           name: ${{ matrix.artifact }}
           path: |
             backend/${{ matrix.artifact }}
+            backend/${{ matrix.artifact }}.sha256
           retention-days: 1
 
   release:
