@@ -1,27 +1,29 @@
 import { createContext } from 'preact'
 import { useState, useRef } from 'preact/hooks'
-import { BotIcon, HistoryIcon, ImagePlusIcon, XIcon, SendIcon } from './icons'
-import { ContextVal, initStore, StoreI, SetState, useStore } from './global-state'
-import useAICompletion from '@/hooks'
+import { BotIcon, HistoryIcon, ImagePlusIcon, XIcon, SendIcon } from './components/icons'
+import { ContextVal, initStore, StoreI, SetState, useStore } from './utils/global-state'
+import useAICompletion from '@/utils/hooks'
 import { Loader } from '@/components/loader'
-import { ChatHistory } from '@/components/chat-history'
-import { models, SelectModel } from '@/components/select-models'
-import { Messages } from '@/components/messages'
+import { ChatHistory } from '@/chat-history'
+import { models, SelectModel } from '@/select-models'
+import { Messages } from '@/messages'
 
 export const Ctx = createContext<ContextVal<typeof chatStore>>(null)
 
 export interface ChatStore {
   seletedChatId: number | undefined
   selectedModel: string
+  selectedProvider: string
   setChat: (chatId: number | undefined) => void
-  changeModel: (modelId: string) => void
+  setModelAndProvider: (modelId: string, provider: string) => void
 }
 
 function chatStore(set: SetState<ChatStore>): StoreI<ChatStore> {
   return {
     seletedChatId: undefined,
     selectedModel: models[0].modelId,
-    changeModel: (modelId) => set((prev) => ({ ...prev, selectedModel: modelId })),
+    selectedProvider: models[0].provider,
+    setModelAndProvider: (modelId, provider) => set((prev) => ({ ...prev, selectedModel: modelId, selectedProvider: provider })),
     setChat: (chatId) => set((prev) => ({ ...prev, seletedChatId: chatId })),
   }
 }

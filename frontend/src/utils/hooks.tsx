@@ -1,5 +1,5 @@
-import { useMutation, invalidateQuery } from '@/query'
-import { ChatStore } from './chat-page'
+import { useMutation, invalidateQuery } from '@/utils/query'
+import { ChatStore } from '../chat-page'
 import { StoreI } from './global-state'
 import { StoreApi, useStore } from './global-state'
 
@@ -7,13 +7,14 @@ export const baseUrl = `http://${window.location.host}`
 
 export default function useAICompletion(chatId: number | undefined, chatStore: StoreApi<StoreI<ChatStore>>) {
   const model = useStore(chatStore, (s) => s.selectedModel)
+  const provider = useStore(chatStore, (s) => s.selectedProvider)
   const { setChat } = chatStore.getState()
 
   const { mutate, error, isPending } = useMutation({
     mutationFn: async (data: { message: string; imageData?: string }) => {
       if (chatId == null) {
         const url = new URL('/api/chats/start', baseUrl)
-        const body = JSON.stringify({ message: data.message, model, imageData: data.imageData })
+        const body = JSON.stringify({ message: data.message, model, provider, imageData: data.imageData })
         const resp = await fetch(url, { method: 'POST', body, headers: { 'Content-Type': 'application/json' } })
         return resp.json()
       }

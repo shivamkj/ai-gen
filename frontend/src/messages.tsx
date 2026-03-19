@@ -1,11 +1,10 @@
-import { useQuery, useMutation, invalidateQuery } from '@/query'
-import { useEffect, useRef, useState } from 'preact/hooks'
-import { TrashIcon } from '@/icons'
-import { ScrollArea } from './scroll-area'
-import { Markdown } from './markdown'
-import { Avatar } from './avatar'
-import { baseUrl } from '@/hooks'
-import { llmOutputToBash } from '../process_code.ts'
+import { useQuery, useMutation, invalidateQuery } from '@/utils/query'
+import { useEffect, useRef } from 'preact/hooks'
+import { TrashIcon } from '@/components/icons.tsx'
+import { ScrollArea } from './components/scroll-area'
+import { Markdown } from './components/markdown'
+import { Avatar } from './components/avatar'
+import { baseUrl } from '@/utils/hooks'
 
 export function Messages({ chatId }: { chatId: number | undefined }) {
   const { data } = useQuery({
@@ -45,7 +44,6 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
         <div
           key={index}
           className={`relative mb-4 flex ${message.role == 'assistant' ? 'flex-row-reverse justify-end' : ''}`}>
-          {message.role == 'assistant' && <CopyCode content={message.content} />}
           <div
             className={`border-zinc-800 bg-gray-900 shadow-lg text-zinc-50 rounded-xl border p-6 overflow-x-hidden${message.role == 'user' ? ' bg-blue-500 text-white ml-auto' : ''}`}>
             {message.image_data && (
@@ -76,25 +74,5 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
         </div>
       ))}
     </ScrollArea>
-  )
-}
-
-function CopyCode({ content }: { content: string }) {
-  const [copied, setCopied] = useState(false)
-
-  function copy() {
-    navigator.clipboard.writeText(llmOutputToBash(content))
-    if (copied) return
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1000)
-  }
-
-  return (
-    <button
-      type="button"
-      className="absolute text-white rounded-lg text-sm px-5 py-2.5 me-2 mb-4 bg-blue-600 left-3 top-15"
-      onClick={copy}>
-      {copied ? 'Copied' : 'Copy'}
-    </button>
   )
 }

@@ -51,6 +51,12 @@ func initDB() {
 	if err := row.Scan(&count); err == nil && count == 0 {
 		db.Exec(`ALTER TABLE messages ADD COLUMN image_data TEXT`)
 	}
+
+	// Migration: add provider column to chats if it doesn't exist yet
+	row = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('chats') WHERE name='provider'`)
+	if err := row.Scan(&count); err == nil && count == 0 {
+		db.Exec(`ALTER TABLE chats ADD COLUMN provider TEXT NOT NULL DEFAULT ''`)
+	}
 }
 
 func closeDB() {

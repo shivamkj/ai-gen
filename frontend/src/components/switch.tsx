@@ -1,4 +1,4 @@
-export function Switch(props: React.HTMLAttributes<HTMLInputElement>) {
+export function Switch(props: preact.HTMLAttributes<HTMLInputElement>) {
   return (
     <label className="relative inline-flex cursor-pointer items-center">
       <input type="checkbox" className="peer sr-only" {...props} />

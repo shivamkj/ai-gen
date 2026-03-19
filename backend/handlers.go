@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 )
 
 const systemPrompt = "You are an AI programming assistant. Don't explain code unless asked. "
@@ -19,7 +18,7 @@ func handleTest(w http.ResponseWriter, _ *http.Request) {
 }
 
 func handleGetAllChats(w http.ResponseWriter, _ *http.Request) {
-	rows, err := db.Query(`SELECT c.id, c.model, c.title, c.created_at FROM chats c ORDER BY c.created_at DESC`)
+	rows, err := db.Query(`SELECT c.id, c.model, c.provider, c.title, c.created_at FROM chats c ORDER BY c.created_at DESC`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -29,13 +28,14 @@ func handleGetAllChats(w http.ResponseWriter, _ *http.Request) {
 	type chatRow struct {
 		ID        int64  `json:"id"`
 		Model     string `json:"model"`
+		Provider  string `json:"provider"`
 		Title     string `json:"title"`
 		CreatedAt string `json:"created_at"`
 	}
 	chats := []chatRow{}
 	for rows.Next() {
 		var c chatRow
-		if err := rows.Scan(&c.ID, &c.Model, &c.Title, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.Model, &c.Provider, &c.Title, &c.CreatedAt); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -48,19 +48,20 @@ func handleStartChat(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Message   string `json:"message"`
 		Model     string `json:"model"`
+		Provider  string `json:"provider"`
 		ImageData string `json:"imageData"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if req.Message == "" || req.Model == "" {
-		http.Error(w, "message and model are required", http.StatusBadRequest)
+	if req.Message == "" || req.Model == "" || req.Provider == "" {
+		http.Error(w, "message, model, and provider are required", http.StatusBadRequest)
 		return
 	}
 
 	title := generateTitle(req.Message)
-	result, err := db.Exec(`INSERT INTO chats (model, title) VALUES (?, ?)`, req.Model, title)
+	result, err := db.Exec(`INSERT INTO chats (model, provider, title) VALUES (?, ?, ?)`, req.Model, req.Provider, title)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -68,7 +69,7 @@ func handleStartChat(w http.ResponseWriter, r *http.Request) {
 	chatID, _ := result.LastInsertId()
 
 	finalMessage := systemPrompt + "\n" + req.Message
-	aiResp, err := processChat(chatID, finalMessage, req.Model, req.ImageData)
+	aiResp, err := processChat(chatID, finalMessage, req.Model, req.Provider, req.ImageData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -96,13 +97,13 @@ func handleReplyChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var model string
-	if err := db.QueryRow(`SELECT model FROM chats WHERE id = ?`, chatID).Scan(&model); err != nil {
+	var model, provider string
+	if err := db.QueryRow(`SELECT model, provider FROM chats WHERE id = ?`, chatID).Scan(&model, &provider); err != nil {
 		http.Error(w, "chat not found", http.StatusNotFound)
 		return
 	}
 
-	aiResp, err := processChat(chatID, req.Message, model, req.ImageData)
+	aiResp, err := processChat(chatID, req.Message, model, provider, req.ImageData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -170,7 +171,7 @@ func handleDeleteMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 // processChat fetches chat history, calls the AI, and saves both messages to DB.
-func processChat(chatID any, message, model, imageData string) (*AiResponse, error) {
+func processChat(chatID any, message, model, provider, imageData string) (*AiResponse, error) {
 	rows, err := db.Query(
 		`SELECT role, content, image_data FROM messages WHERE chat_id = ? ORDER BY created_at ASC`,
 		chatID,
@@ -196,12 +197,13 @@ func processChat(chatID any, message, model, imageData string) (*AiResponse, err
 	messages = append(messages, Message{Role: "user", Content: message, ImageData: imageData})
 
 	var aiResp *AiResponse
-	if strings.HasPrefix(model, "deepseek") {
+	switch provider {
+	case "deepseek":
 		aiResp, err = callDeepSeek(model, messages)
-	} else if strings.HasPrefix(model, "us.") || strings.HasPrefix(model, "global.") {
+	case "bedrock":
 		aiResp, err = callBedrock(model, messages)
-	} else {
-		return nil, fmt.Errorf("unknown model: %s", model)
+	default:
+		return nil, fmt.Errorf("unknown provider: %s", provider)
 	}
 	if err != nil {
 		return nil, err

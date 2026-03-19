@@ -1,17 +1,17 @@
-import { useQuery, useMutation, invalidateQuery } from '@/query'
-import { baseUrl } from '@/hooks'
+import { useQuery, useMutation, invalidateQuery } from '@/utils/query'
+import { baseUrl } from '@/utils/hooks'
 import { Ctx } from '@/chat-page'
-import { TrashIcon } from '@/icons'
-import { useAction } from '@/global-state'
+import { TrashIcon } from '@/components/icons'
+import { useAction } from '@/utils/global-state'
 
-type ChatHistory = { id: number; title: string; date: string }
+type ChatHistory = { id: number; model: string; provider: string; title: string; created_at: string }
 
 export function ChatHistory({ selectedChatId }: { selectedChatId: number | undefined }) {
   const { isPending, data } = useQuery<ChatHistory[]>({
     queryKey: ['chatHistory'] as const,
     queryFn: () => fetch(`${baseUrl}/api/chats`).then((res) => res.json()),
   })
-  const { setChat } = useAction(Ctx)
+  const { setChat, setModelAndProvider } = useAction(Ctx)
 
   const { mutate: deleteChat } = useMutation({
     mutationFn: async (id: number) => {
@@ -37,7 +37,7 @@ export function ChatHistory({ selectedChatId }: { selectedChatId: number | undef
         <div
           key={chat.id}
           className={`p-2 hover:bg-gray-700 rounded-sm cursor-pointer flex justify-between items-center${selectedChatId == chat.id ? ' bg-gray-800' : ''}`}
-          onClick={() => setChat(chat.id)}>
+          onClick={() => { setChat(chat.id); setModelAndProvider(chat.model, chat.provider) }}>
           <div>
             <div className="text-white font-medium line-clamp-2" style={{ overflowWrap: 'anywhere' }}>
               {chat.title}
