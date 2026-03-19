@@ -6,21 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "prod": "node --experimental-strip-types backend/express.ts",
     "format": "prettier . --write --list-different --cache --cache-strategy metadata",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.957.0",
     "@tanstack/react-query": "^5.90.12",
-    "better-sqlite3": "^11.10.0",
     "clsx": "^2.1.1",
-    "dotenv": "^16.6.1",
-    "express": "^5.2.1",
-    "keyword-extractor": "^0.0.28",
     "lucide-react": "^0.516.0",
     "marked": "^15.0.12",
-    "openai": "^5.23.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tailwindcss": "^4.1.18",
@@ -29,7 +22,6 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
-    "@types/express": "^5.0.6",
     "@types/react": "^19.2.7",
     "@vitejs/plugin-react": "^4.7.0",
     "prettier": "^3.7.4",
