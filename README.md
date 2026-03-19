@@ -1,4 +1,4 @@
-# ai-gen
+# Gen-AI
 
 A minimal AI chat app with a Go backend and Preact frontend, served as a single binary.
 

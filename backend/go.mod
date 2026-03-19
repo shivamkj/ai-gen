@@ -1,4 +1,4 @@
-module ai-gen
+module gen-ai
 
 go 1.24
 
