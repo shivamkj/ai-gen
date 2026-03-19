@@ -1,19 +1,13 @@
-import { forwardRef } from 'react'
-
 interface ScrollAreaProps {
-  children: React.ReactNode
+  children: preact.ContainerNode
   outerClass?: string
   innerClass?: string
+  outerRef?: preact.Ref<HTMLDivElement>
 }
 
-export const ScrollArea = forwardRef(__ScrollArea)
-
-function __ScrollArea(
-  { children, outerClass = '', innerClass = '' }: ScrollAreaProps,
-  ref: React.ForwardedRef<HTMLDivElement>
-) {
+export function ScrollArea({ children, outerClass = '', innerClass = '', outerRef }: ScrollAreaProps) {
   return (
-    <div className={`relative w-full overflow-hidden ${outerClass}`} ref={ref}>
+    <div className={`relative w-full overflow-hidden ${outerClass}`} ref={outerRef}>
       <div className={`h-full w-full overflow-auto ${innerClass}`} data-scrollable="true">
         {children}
       </div>

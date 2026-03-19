@@ -10,13 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.90.12",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.516.0",
     "marked": "^15.0.12",
     "preact": "^10.26.4",
-    "tailwindcss": "^4.1.18",
-    "zustand": "^5.0.9"
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

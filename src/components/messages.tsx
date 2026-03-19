@@ -1,42 +1,35 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { useQuery, useMutation, invalidateQuery } from '@/query'
+import { useEffect, useRef, useState } from 'preact/hooks'
+import { TrashIcon } from '@/icons'
 import { ScrollArea } from './scroll-area'
 import { Markdown } from './markdown'
 import { Avatar } from './avatar'
 import { baseUrl } from '@/hooks'
-import clsx from 'clsx'
 import { llmOutputToBash } from '../process_code.ts'
 
 export function Messages({ chatId }: { chatId: number | undefined }) {
   const { data } = useQuery({
-    queryKey: ['chat', chatId],
+    queryKey: ['chat', chatId] as const,
     enabled: chatId != null,
     queryFn: () => fetch(`${baseUrl}/api/chats/${chatId}/messages`).then((res) => res.json()),
   })
-
-  const queryClient = useQueryClient()
 
   const { mutate: deleteMessage } = useMutation({
     mutationFn: async (id: number) => {
       const response = await fetch(`${baseUrl}/api/messages/${id}`, { method: 'DELETE' })
       return response.json()
     },
-    onSuccess: (_) => {
-      queryClient.invalidateQueries({ queryKey: ['chat', chatId] })
+    onSuccess: () => {
+      invalidateQuery(['chat', chatId])
     },
   })
 
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
+  useEffect(() => {
     if (!scrollAreaRef.current) return
     const scrollContainer = scrollAreaRef.current.querySelector('[data-scrollable]')
     if (scrollContainer) scrollContainer.scrollTop = scrollContainer.scrollHeight
-  }
-
-  useEffect(() => {
-    scrollToBottom()
   }, [data])
 
   function deleteChat(messageId: number) {
@@ -47,17 +40,14 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
   if (data == null) return <div className="flex-1 text-2xl"></div>
 
   return (
-    <ScrollArea outerClass="flex-1" innerClass="p-4" ref={scrollAreaRef}>
+    <ScrollArea outerClass="flex-1" innerClass="p-4" outerRef={scrollAreaRef}>
       {data.map((message: any, index: any) => (
         <div
           key={index}
           className={`relative mb-4 flex ${message.role == 'assistant' ? 'flex-row-reverse justify-end' : ''}`}>
           {message.role == 'assistant' && <CopyCode content={message.content} />}
           <div
-            className={clsx(
-              `border-zinc-800 bg-gray-900 shadow-lg text-zinc-50 rounded-xl border p-6 overflow-x-hidden`,
-              message.role == 'user' && 'bg-blue-500 text-white ml-auto'
-            )}>
+            className={`border-zinc-800 bg-gray-900 shadow-lg text-zinc-50 rounded-xl border p-6 overflow-x-hidden${message.role == 'user' ? ' bg-blue-500 text-white ml-auto' : ''}`}>
             {message.image_data && (
               <div className="mb-4">
                 <img
@@ -78,7 +68,7 @@ export function Messages({ chatId }: { chatId: number | undefined }) {
                 <div />
               )}
               <div>
-                <Trash2 className="text-red-700" onClick={(_) => deleteChat(message.id)} />
+                <TrashIcon className="text-red-700" onClick={() => deleteChat(message.id)} />
               </div>
             </div>
           </div>

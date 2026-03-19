@@ -1,5 +1,5 @@
 import { marked } from 'marked'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'preact/hooks'
 
 export function Markdown({ content }: { content: string }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -8,7 +8,7 @@ export function Markdown({ content }: { content: string }) {
     addCopyButtonsToCodeBlocks(ref.current!)
   }, [content])
 
-  return <div ref={ref} dangerouslySetInnerHTML={{ __html: marked.parse(content) }} />
+  return <div ref={ref} dangerouslySetInnerHTML={{ __html: marked.parse(content) as string }} />
 }
 
 function addCopyButtonsToCodeBlocks(container: HTMLElement) {

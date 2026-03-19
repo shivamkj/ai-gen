@@ -1,18 +1,15 @@
-import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { useMutation, invalidateQuery } from '@/query'
 import { ChatStore } from './chat-page'
 import { StoreI } from './global-state'
-import { StoreApi, useStore } from 'zustand'
+import { StoreApi, useStore } from './global-state'
 
 export const baseUrl = `http://${window.location.host}`
 
 export default function useAICompletion(chatId: number | undefined, chatStore: StoreApi<StoreI<ChatStore>>) {
-  const queryClient = useQueryClient()
-
   const model = useStore(chatStore, (s) => s.selectedModel)
   const { setChat } = chatStore.getState()
 
   const { mutate, error, isPending } = useMutation({
-    mutationKey: ['chat', chatId],
     mutationFn: async (data: { message: string; imageData?: string }) => {
       if (chatId == null) {
         const url = new URL('/api/chats/start', baseUrl)
@@ -29,23 +26,19 @@ export default function useAICompletion(chatId: number | undefined, chatStore: S
     onError: (error, data) => {
       console.error(error)
       console.log('==data==')
-      console.log(data)
+      console.log(data.message)
       console.log('==data==')
-      showErrorToast(`Unexpected Error Occured: ${error?.name}: ${error?.message}`)
+      alert(`Unexpected Error Occured: ${error?.name}: ${error?.message}`)
     },
     onSuccess: (data) => {
       const createdChatId = data?.chat?.id
       if (createdChatId != null) {
         setChat(createdChatId)
-        queryClient.invalidateQueries({ queryKey: ['chatHistory'] })
+        invalidateQuery(['chatHistory'])
       }
-      queryClient.invalidateQueries({ queryKey: ['chat', chatId] })
+      invalidateQuery(['chat', chatId])
     },
   })
 
   return { mutate, error, isPending } as const
-}
-
-function showErrorToast(message: string) {
-  alert(message);
 }

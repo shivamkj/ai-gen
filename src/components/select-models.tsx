@@ -6,7 +6,7 @@ export const models = [
     name: 'Claude 4.6 Sonnet',
     modelId: 'us.anthropic.claude-sonnet-4-6',
   },
- {
+  {
     name: 'Claude 4.5 Sonnet',
     modelId: 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
   },

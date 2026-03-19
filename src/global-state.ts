@@ -1,5 +1,4 @@
-import { useContext, useEffect, useRef } from 'react'
-import { createStore, StateCreator, StoreApi, useStore } from 'zustand'
+import { useContext, useEffect, useRef, useState } from 'preact/hooks'
 
 interface Callbacks {
   onInit?: () => Promise<void>
@@ -7,13 +6,48 @@ interface Callbacks {
 }
 
 export type ContextVal<T extends (...args: any) => any> = StoreApi<Omit<ReturnType<T>, 'onInit' | 'onClose'>> | null
-
 export type StoreI<StoreData> = Omit<StoreData, 'onInit' | 'onClose'> & Callbacks
+export type SetState<T> = (partial: Partial<T> | ((state: T) => Partial<T>)) => void
 
-export type SetState<T> = (partial: T | Partial<T> | ((state: T) => T | Partial<T>), replace?: false) => void
+export interface StoreApi<T> {
+  getState: () => T
+  setState: SetState<T>
+  subscribe: (listener: () => void) => () => void
+}
 
-export function initStore<T extends Callbacks>(initializer: StateCreator<T>): StoreApi<T> {
-  // @ts-expect-error
+export function createStore<T>(initializer: (set: SetState<T>) => T): StoreApi<T> {
+  let state: T
+  const listeners = new Set<() => void>()
+
+  const set: SetState<T> = (partial) => {
+    const update = typeof partial === 'function' ? (partial as (s: T) => Partial<T>)(state) : partial
+    state = { ...state, ...update }
+    listeners.forEach((l) => l())
+  }
+
+  state = initializer(set)
+
+  return {
+    getState: () => state,
+    setState: set,
+    subscribe: (listener) => {
+      listeners.add(listener)
+      return () => {
+        listeners.delete(listener)
+      }
+    },
+  }
+}
+
+export function useStore<T, U>(store: StoreApi<T>, selector: (s: T) => U): U {
+  const [value, setValue] = useState(() => selector(store.getState()))
+  useEffect(() => {
+    return store.subscribe(() => setValue(selector(store.getState())))
+  }, [store])
+  return value
+}
+
+export function initStore<T extends Callbacks>(initializer: (set: SetState<T>) => T): StoreApi<T> {
   const storeRef = useRef<StoreApi<T>>()
 
   if (!storeRef.current) {
@@ -21,26 +55,21 @@ export function initStore<T extends Callbacks>(initializer: StateCreator<T>): St
   }
 
   useEffect(() => {
-    storeRef.current.getState().onInit?.()
-
-    return () => storeRef.current.getState().onClose?.() as void
+    storeRef.current!.getState().onInit?.()
+    return () => storeRef.current!.getState().onClose?.() as void
   }, [])
 
   return storeRef.current
 }
 
-export function useStoreX<T, U>(StoreContext: React.Context<StoreApi<T> | null>, selector: (state: T) => U): U {
+export function useStoreX<T, U>(StoreContext: preact.Context<StoreApi<T> | null>, selector: (state: T) => U): U {
   const store = useContext(StoreContext)
-  if (!store) {
-    throw new Error('Missing StoreProvider')
-  }
+  if (!store) throw new Error('Missing StoreProvider')
   return useStore(store, selector)
 }
 
-export function useAction<T>(StoreContext: React.Context<StoreApi<T> | null>): T {
+export function useAction<T>(StoreContext: preact.Context<StoreApi<T> | null>): T {
   const store = useContext(StoreContext)
-  if (!store) {
-    throw new Error('Missing StoreProvider')
-  }
+  if (!store) throw new Error('Missing StoreProvider')
   return store.getState()
 }

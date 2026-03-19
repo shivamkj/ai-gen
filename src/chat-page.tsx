@@ -1,9 +1,7 @@
-import { createContext, } from 'preact'
-import { useState, useRef } from 'preact/hooks';
-import { Send, Bot, History, ImagePlus, X } from 'lucide-react'
-import { ContextVal, initStore, StoreI, SetState } from './global-state'
-import { useStore } from 'zustand'
-import clsx from 'clsx'
+import { createContext } from 'preact'
+import { useState, useRef } from 'preact/hooks'
+import { BotIcon, HistoryIcon, ImagePlusIcon, XIcon, SendIcon } from './icons'
+import { ContextVal, initStore, StoreI, SetState, useStore } from './global-state'
 import useAICompletion from '@/hooks'
 import { Loader } from '@/components/loader'
 import { ChatHistory } from '@/components/chat-history'
@@ -27,7 +25,8 @@ function chatStore(set: SetState<ChatStore>): StoreI<ChatStore> {
     setChat: (chatId) => set((prev) => ({ ...prev, seletedChatId: chatId })),
   }
 }
-function handleTextInputSize(e: React.FormEvent<HTMLTextAreaElement>) {
+
+function handleTextInputSize(e: Event) {
   const inputElement = e.target as HTMLTextAreaElement
   inputElement.style.height = 'auto'
   inputElement.style.height = inputElement.scrollHeight + 'px'
@@ -43,17 +42,13 @@ export const ChatInterface = () => {
   const { setChat } = storeValue.getState()
   const { mutate, isPending } = useAICompletion(selectedChatId, storeValue)
 
-  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
+  function handleImageSelect(e: Event) {
+    const file = (e.target as HTMLInputElement).files?.[0]
     if (!file) return
-
-    // Check if file is an image
     if (!file.type.startsWith('image/')) {
       alert('Please select an image file')
       return
     }
-
-    // Convert to base64
     const reader = new FileReader()
     reader.onload = (e) => {
       const result = e.target?.result as string
@@ -83,7 +78,7 @@ export const ChatInterface = () => {
       <div className="flex h-screen dark bg-gray-950">
         <div className="w-64 border-r p-4 bg-gray-900 border-gray-700 h-screen overflow-y-auto">
           <div className="flex items-center gap-2 mb-6">
-            <Bot className="h-6 w-6 text-white" />
+            <BotIcon className="h-6 w-6 text-white" />
             <h1 className="text-xl font-bold text-white">AI Chat</h1>
           </div>
 
@@ -95,7 +90,7 @@ export const ChatInterface = () => {
           </button>
 
           <div className="flex items-center gap-2 mb-4 text-white">
-            <History className="h-4 w-4" />
+            <HistoryIcon className="h-4 w-4" />
             <span className="font-medium">Chat History</span>
           </div>
 
@@ -116,38 +111,26 @@ export const ChatInterface = () => {
                 <button
                   onClick={clearImage}
                   className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 hover:bg-red-600">
-                  <X className="h-4 w-4 text-white" />
+                  <XIcon className="h-4 w-4 text-white" />
                 </button>
               </div>
             )}
             <div className="flex gap-2 items-center">
-              <input
-                type="file"
-                ref={fileInputRef}
-                // @ts-expect-error
-                onChange={handleImageSelect}
-                accept="image/*"
-                className="hidden"
-              />
+              <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="border border-gray-500 rounded-sm p-4 hover:bg-gray-800"
                 title="Upload image">
-                <ImagePlus className="h-4 w-4 text-white" />
+                <ImagePlusIcon className="h-4 w-4 text-white" />
               </button>
               <textarea
-                // onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                className={clsx(
-                  'bg-transparent text-sm text-white placeholder:text-zinc-400 focus-visible:ring-gray-300 rounded-md border p-2 focus-visible:ring-1 disabled:opacity-50',
-                  'h-auto max-h-96 w-full overflow-auto resize-none flex-1'
-                )}
+                className="bg-transparent text-sm text-white placeholder:text-zinc-400 focus-visible:ring-gray-300 rounded-md border p-2 focus-visible:ring-1 disabled:opacity-50 h-auto max-h-96 w-full overflow-auto resize-none flex-1"
                 placeholder="Type your message..."
-                // @ts-expect-error
                 onInput={handleTextInputSize}
                 ref={inputRef}
               />
               <button className="border border-gray-500 rounded-sm px-6 size-16" onClick={handleSend}>
-                <Send className="h-4 w-4 text-white" />
+                <SendIcon className="h-4 w-4 text-white" />
               </button>
             </div>
           </div>
