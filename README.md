@@ -28,17 +28,15 @@ PORT=6713
 ## Dev
 
 ```sh
-# Frontend dev server
-cd frontend && pnpm dev
-
-# Build & run production binary
-cd frontend && pnpm build
-./ai-gen
+# Build binary
+./build.sh
+# Start server
+./gen-ai
 ```
 
 ## Running on Startup
 
-The `ai-gen` binary and its `.env`/`chats.db` files must stay in the same directory — the binary loads `.env` and writes `chats.db` relative to its working directory.
+The `gen-ai` binary and its `.env`/`chats.db` files must stay in the same directory — the binary loads `.env` and writes `chats.db` relative to its working directory.
 
 ### Linux (systemd)
 
@@ -85,7 +83,7 @@ sudo systemctl disable gen-ai
 
 A ready-to-use plist is at [`deploy/com.gen-ai.plist`](deploy/com.gen-ai.plist).
 
-1. Edit the plist and replace `/path/to/gen-ai` with the absolute path to the directory containing the `ai-gen` binary:
+1. Edit the plist and replace `/path/to/gen-ai` with the absolute path to the directory containing the `gen-ai` binary:
 
    ```sh
    nano deploy/com.gen-ai.plist
@@ -140,7 +138,7 @@ Windows Task Scheduler can run the binary at login with automatic restart on fai
 
 5. **Actions tab:**
    - Click **New** → **Action:** `Start a program`.
-   - **Program/script:** Browse to `C:\path\to\gen-ai\ai-gen.exe`.
+   - **Program/script:** Browse to `C:\path\to\gen-ai\gen-ai.exe`.
    - **Start in:** `C:\path\to\gen-ai` (the directory containing the binary and `.env`). This is required so the binary finds its `.env` and `chats.db`.
    - Click OK.
 
@@ -156,7 +154,7 @@ To view output, the app logs to stdout — you can redirect it by changing the A
 ```bat
 @echo off
 cd /d C:\path\to\gen-ai
-ai-gen.exe >> logs\gen-ai.log 2>&1
+gen-ai.exe >> logs\gen-ai.log 2>&1
 ```
 
 Then point the Task Scheduler action at this `.bat` file with **Start in** set to the same directory.

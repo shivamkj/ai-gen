@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=YOUR_USERNAME
 WorkingDirectory=/path/to/gen-ai
-ExecStart=/path/to/gen-ai/ai-gen
+ExecStart=/path/to/gen-ai/gen-ai
 Restart=on-failure
 RestartSec=5
 

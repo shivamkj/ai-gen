@@ -8,5 +8,5 @@ cd ..
 
 # Build Backend
 cd backend
-go build -ldflags="-s -w" -o ../ai-gen .
+go build -ldflags="-s -w" -o ../gen-ai .
 cd ..

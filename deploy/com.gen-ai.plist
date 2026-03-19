@@ -7,7 +7,7 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/path/to/gen-ai/ai-gen</string>
+        <string>/path/to/gen-ai/gen-ai</string>
     </array>
 
     <key>WorkingDirectory</key>
