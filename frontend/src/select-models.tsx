@@ -2,16 +2,19 @@ import { useAction, useStoreX } from '#/utils/global-state.ts'
 import { Ctx } from '#/chat-page.tsx'
 
 const modelsByProvider: Record<string, { label: string; models: { name: string; modelId: string }[] }> = {
+  deepseek: {
+    label: 'Deepseek',
+    models: [
+      { name: 'Deepseek v4 Pro', modelId: 'deepseek-v4-pro' },
+      { name: 'Deepseek v4 Flash', modelId: 'deepseek-v4-flash' },
+    ],
+  },
   bedrock: {
     label: 'AWS Bedrock',
     models: [
       { name: 'Claude 4.6 Sonnet', modelId: 'us.anthropic.claude-sonnet-4-6' },
       { name: 'Claude 4.5 Sonnet', modelId: 'us.anthropic.claude-sonnet-4-5-20250929-v1:0' },
     ],
-  },
-  deepseek: {
-    label: 'Deepseek',
-    models: [{ name: 'Deepseek v3', modelId: 'deepseek-chat' }],
   },
 }
 
